@@ -90,7 +90,7 @@ const badgeVariant = computed((): BadgeVariant => {
 .card-image {
   position: relative;
   width: 100%;
-  height: 190px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   flex-shrink: 0;
 }

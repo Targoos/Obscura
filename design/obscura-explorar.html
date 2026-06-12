@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explorar — OBSCURA | Archivo de Casos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=Crimson+Text:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS — Obscura v1.0
+    ═══════════════════════════════════════════════ */
+    :root {
+      --color-bg:           #080808;
+      --color-surface:      #0f0f0f;
+      --color-surface-2:    #161616;
+      --color-border:       #1f1f1f;
+      --color-muted:        #444444;
+      --color-text:         #d4d4d4;
+      --color-accent:       #cc0000;
+      --color-accent-dim:   #7a0000;
+      --color-classified:   #ff6600;
+      --color-open:         #22994d;
+      --color-unresolved:   #b8860b;
+
+      --font-display: 'Cinzel', 'Times New Roman', serif;
+      --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+      --font-mono:    'IBM Plex Mono', 'Menlo', monospace;
+      --font-quote:   'Crimson Text', Georgia, serif;
+
+      --radius:    4px;
+      --header-h:  64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    body { background: var(--color-bg); position: relative; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ═══════════════════════════════════════════════
+       KEYFRAMES
+    ═══════════════════════════════════════════════ */
+    @keyframes flicker {
+      0%, 89%, 91%, 93%, 95%, 97%, 100% { opacity: 1; }
+      90%  { opacity: 0.35; }
+      92%  { opacity: 0.8; }
+      94%  { opacity: 0.3; }
+      96%  { opacity: 0.9; }
+    }
+
+    @keyframes flickerFast {
+      0%, 94%, 96%, 100% { opacity: 1; }
+      95% { opacity: 0.2; }
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scanline {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(200vh); }
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    /* ═══════════════════════════════════════════════
+       FILM GRAIN + SCANLINE
+    ═══════════════════════════════════════════════ */
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23g)'/%3E%3C/svg%3E");
+      background-size: 400px 400px;
+    }
+
+    .scanline-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      overflow: hidden;
+    }
+    .scanline-overlay::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 200px;
+      background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(255,255,255,0.007) 50%,
+        transparent 100%);
+      animation: scanline 16s linear infinite;
+    }
+
+    /* ═══════════════════════════════════════════════
+       APP HEADER
+    ═══════════════════════════════════════════════ */
+    .app-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 48px;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background 0.35s ease, border-color 0.35s ease, backdrop-filter 0.35s ease;
+    }
+
+    .app-header.scrolled {
+      background: rgba(15, 15, 15, 0.92);
+      border-bottom-color: var(--color-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .header-logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      animation: flicker 12s 2s infinite;
+      display: flex;
+      align-items: baseline;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .logo-u-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .logo-red-dot {
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      animation: flickerFast 6s 1s infinite;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin: 0 auto;
+    }
+
+    .header-nav a {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .header-nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0; right: 0;
+      height: 1px;
+      background: var(--color-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.25s ease;
+    }
+
+    .header-nav a:hover { color: var(--color-text); }
+    .header-nav a:hover::after { transform: scaleX(1); }
+
+    .header-nav a.active {
+      color: #c0c0c0;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .search-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid var(--color-border);
+      color: var(--color-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .search-btn:hover { border-color: var(--color-muted); color: var(--color-text); }
+    .search-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .login-btn {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: none;
+      border: 1px solid var(--color-accent);
+      padding: 8px 20px;
+      border-radius: var(--radius);
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    .login-btn:hover {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      padding: 6px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--color-text);
+    }
+
+    /* ═══════════════════════════════════════════════
+       PAGE HEADER
+    ═══════════════════════════════════════════════ */
+    .page-header {
+      position: relative;
+      height: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-top: var(--header-h);
+    }
+
+    .page-header-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 100% 80% at 50% -10%, rgba(30, 10, 10, 0.7) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 90% at 0% 50%, rgba(10, 6, 6, 0.8) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 70% at 100% 40%, rgba(14, 8, 8, 0.6) 0%, transparent 55%),
+        radial-gradient(ellipse 90% 80% at 50% 80%, rgba(8, 8, 8, 1) 0%, #080808 70%);
+    }
+
+    .page-header-grid {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 19.9%, rgba(255,255,255,0.006) 20%, rgba(255,255,255,0.006) 20.1%, transparent 20.1%),
+        linear-gradient(90deg, transparent 39.9%, rgba(255,255,255,0.004) 40%, rgba(255,255,255,0.004) 40.1%, transparent 40.1%),
+        linear-gradient(90deg, transparent 59.9%, rgba(255,255,255,0.004) 60%, rgba(255,255,255,0.004) 60.1%, transparent 60.1%),
+        linear-gradient(90deg, transparent 79.9%, rgba(255,255,255,0.006) 80%, rgba(255,255,255,0.006) 80.1%, transparent 80.1%),
+        linear-gradient(180deg, transparent 49%, rgba(255,255,255,0.004) 49.5%, rgba(255,255,255,0.004) 50%, transparent 50%),
+        linear-gradient(180deg, transparent 74%, rgba(255,255,255,0.003) 74.5%, transparent 75%);
+      pointer-events: none;
+    }
+
+    .page-header-vignette {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(8,8,8,0.5) 0%, transparent 30%, transparent 60%, #080808 100%),
+        radial-gradient(ellipse 85% 90% at 50% 50%, transparent 30%, rgba(8,8,8,0.4) 70%, rgba(8,8,8,0.8) 100%);
+      pointer-events: none;
+    }
+
+    .page-header-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .page-header-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      user-select: none;
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: clamp(64px, 10vw, 120px);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      line-height: 1;
+      min-height: 1.1em;
+    }
+
+    .page-title.flicker-anim {
+      animation: flicker 8s 1s infinite;
+    }
+
+    .page-header-count {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      opacity: 0;
+      animation: slideUpFade 0.6s 2.4s forwards;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SEARCH + FILTERS BAR
+    ═══════════════════════════════════════════════ */
+    .filters-bar {
+      position: sticky;
+      top: var(--header-h);
+      z-index: 100;
+      background: var(--color-surface-2);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .filters-bar-main {
+      display: flex;
+      align-items: center;
+      height: 56px;
+      padding: 0 48px;
+      gap: 16px;
+    }
+
+    /* Terminal search input */
+    .search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .search-input-prompt {
+      position: absolute;
+      left: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-accent);
+      pointer-events: none;
+      z-index: 1;
+      animation: blink 1.1s step-end infinite;
+    }
+
+    .search-input {
+      width: 380px;
+      height: 36px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 0;
+      color: var(--color-text);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      letter-spacing: 0.04em;
+      padding: 0 12px 0 24px;
+      outline: none;
+      caret-color: var(--color-accent);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-input::placeholder {
+      color: var(--color-muted);
+      font-style: normal;
+    }
+
+    .search-input:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.08), 0 0 12px rgba(204, 0, 0, 0.06);
+    }
+
+    .search-input:focus + .search-input-prompt,
+    .search-input:not(:placeholder-shown) + .search-input-prompt {
+      display: none;
+    }
+
+    /* Fix: prompt overlaps text when focused */
+    .search-input-wrap:focus-within .search-input-prompt {
+      display: none;
+    }
+
+    /* Filter buttons */
+    .filter-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 0;
+      padding: 6px 14px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--color-muted);
+      color: var(--color-text);
+    }
+
+    .filter-btn.active {
+      border-color: var(--color-accent);
+      color: var(--color-text);
+      box-shadow: 0 0 8px rgba(204, 0, 0, 0.15);
+    }
+
+    .filter-btn-arrow {
+      font-size: 7px;
+      opacity: 0.5;
+      transition: transform 0.15s;
+    }
+
+    .filter-btn.open .filter-btn-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* View toggle */
+    .view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .view-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 0;
+      color: var(--color-muted);
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .view-btn:hover {
+      color: var(--color-text);
+      border-color: var(--color-muted);
+    }
+
+    .view-btn.active {
+      color: var(--color-accent);
+      border-color: var(--color-accent-dim);
+    }
+
+    .view-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Dropdown panels */
+    .dropdown-panel {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 200px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-top: none;
+      z-index: 300;
+      display: none;
+    }
+
+    .dropdown-panel.open { display: block; }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .dropdown-item:hover {
+      color: var(--color-text);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .dropdown-item.selected {
+      color: var(--color-text);
+    }
+
+    .dropdown-item-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .dropdown-item.selected .dropdown-item-dot {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+
+    /* Active filter tags row */
+    .active-filters {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 48px;
+      border-top: 1px solid var(--color-border);
+      background: var(--color-surface);
+    }
+
+    .active-filters.visible {
+      display: flex;
+    }
+
+    .filter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: rgba(204, 0, 0, 0.06);
+      border: 1px solid rgba(204, 0, 0, 0.3);
+      border-radius: var(--radius);
+      padding: 3px 8px 3px 10px;
+    }
+
+    .filter-tag-remove {
+      background: none;
+      border: none;
+      color: var(--color-muted);
+      font-size: 12px;
+      line-height: 1;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+
+    .filter-tag-remove:hover { color: var(--color-accent); }
+
+    /* ═══════════════════════════════════════════════
+       RESULTS AREA
+    ═══════════════════════════════════════════════ */
+    .results-area {
+      padding: 40px 48px 64px;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .results-count {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+    }
+
+    .sort-wrap {
+      position: relative;
+    }
+
+    .sort-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      background: none;
+      border: 1px solid var(--color-border);
+      border-radius: 0;
+      padding: 6px 12px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .sort-btn:hover {
+      color: var(--color-text);
+      border-color: var(--color-muted);
+    }
+
+    .sort-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      min-width: 200px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-top: none;
+      z-index: 300;
+      display: none;
+    }
+
+    .sort-dropdown.open { display: block; }
+
+    .sort-option {
+      display: block;
+      padding: 10px 16px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .sort-option:hover {
+      color: var(--color-text);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .sort-option.selected { color: var(--color-text); }
+
+    /* ═══════════════════════════════════════════════
+       GRID VIEW
+    ═══════════════════════════════════════════════ */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       MYSTERY CARD — 3/4 ratio variant
+    ═══════════════════════════════════════════════ */
+    .mystery-card {
+      position: relative;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mystery-card:hover {
+      border-color: rgba(122, 0, 0, 0.6);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    .mystery-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--color-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+
+    .mystery-card:hover::after { transform: scaleX(1); }
+
+    .card-image {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .card-image-bg {
+      position: absolute;
+      inset: 0;
+      filter: grayscale(0.8) brightness(0.4) contrast(1.1);
+      transition: transform 0.45s ease, filter 0.3s;
+    }
+
+    .mystery-card:hover .card-image-bg {
+      transform: scale(1.04);
+      filter: grayscale(0.55) brightness(0.5) contrast(1.1);
+    }
+
+    .card-image-vignette {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 35%, rgba(15, 15, 15, 0.65) 65%, rgba(15, 15, 15, 0.96) 100%);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      border-radius: var(--radius);
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .card-classification {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-family: var(--font-mono);
+      font-size: 7.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: var(--radius);
+      z-index: 2;
+      color: var(--color-muted);
+      border: 1px solid rgba(68,68,68,0.45);
+      background: rgba(8,8,8,0.7);
+    }
+
+    .badge--abierto    { color: var(--color-open);       border: 1px solid rgba(34,153,77,0.55);   background: rgba(34,153,77,0.07); }
+    .badge--archivado  { color: var(--color-muted);       border: 1px solid rgba(68,68,68,0.55);    background: rgba(68,68,68,0.07); }
+    .badge--clasificado { color: var(--color-classified); border: 1px solid rgba(255,102,0,0.5);    background: rgba(255,102,0,0.06); }
+    .badge--sin-resolver { color: var(--color-accent);   border: 1px solid rgba(204,0,0,0.5);      background: rgba(204,0,0,0.06); }
+
+    .classification--bajo    { border-color: rgba(34,153,77,0.35); color: #22994d; }
+    .classification--medio   { border-color: rgba(184,134,11,0.35); color: #b8860b; }
+    .classification--alto    { border-color: rgba(255,102,0,0.35); color: var(--color-classified); }
+    .classification--extremo { border-color: rgba(204,0,0,0.5); color: var(--color-accent); }
+
+    .card-body {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .card-case-id {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-meta-sep { color: var(--color-border); }
+
+    /* Card entrance animation */
+    .mystery-card.slide-up {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUp 0.45s ease forwards;
+    }
+
+    /* Stagger delays */
+    .results-grid .mystery-card:nth-child(1) { animation-delay: 0.05s; }
+    .results-grid .mystery-card:nth-child(2) { animation-delay: 0.10s; }
+    .results-grid .mystery-card:nth-child(3) { animation-delay: 0.15s; }
+    .results-grid .mystery-card:nth-child(4) { animation-delay: 0.20s; }
+    .results-grid .mystery-card:nth-child(5) { animation-delay: 0.25s; }
+    .results-grid .mystery-card:nth-child(6) { animation-delay: 0.30s; }
+    .results-grid .mystery-card:nth-child(7) { animation-delay: 0.35s; }
+    .results-grid .mystery-card:nth-child(8) { animation-delay: 0.40s; }
+
+    /* ═══════════════════════════════════════════════
+       LIST VIEW
+    ═══════════════════════════════════════════════ */
+    .results-list {
+      display: none;
+      flex-direction: column;
+      border: 1px solid var(--color-border);
+    }
+
+    .results-list.visible {
+      display: flex;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      height: 52px;
+      padding: 0 16px;
+      gap: 16px;
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s;
+    }
+
+    .list-row:last-child { border-bottom: none; }
+
+    .list-row::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: transparent;
+      transition: background 0.15s;
+    }
+
+    .list-row:hover {
+      background: var(--color-surface-2);
+    }
+
+    .list-row:hover::before {
+      background: var(--color-accent);
+    }
+
+    .list-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot--abierto    { background: var(--color-open); }
+    .dot--archivado  { background: var(--color-muted); }
+    .dot--clasificado { background: var(--color-classified); }
+    .dot--sin-resolver { background: var(--color-accent); }
+
+    .list-case-id {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.15em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      width: 120px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .list-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-country {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+      color: var(--color-muted);
+      flex-shrink: 0;
+      width: 36px;
+      text-align: center;
+    }
+
+    .list-year {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+      color: var(--color-muted);
+      width: 42px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .list-category {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      border: 1px solid var(--color-border);
+      padding: 2px 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .list-classification {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════
+       CARD ATMOSPHERIC BACKGROUNDS
+    ═══════════════════════════════════════════════ */
+    .card-bg--1 { background: radial-gradient(circle at 30% 40%, rgba(45,35,25,0.8) 0%, transparent 55%), radial-gradient(circle at 80% 70%, rgba(20,15,10,0.6) 0%, transparent 40%), linear-gradient(160deg, #1c1510 0%, #0f0c08 40%, #131008 70%, #0c0a06 100%); }
+    .card-bg--2 { background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(15,20,28,0.9) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 20% 80%, rgba(10,12,18,0.7) 0%, transparent 50%), linear-gradient(175deg, #0e1218 0%, #080c12 45%, #0a0e16 70%, #060810 100%); }
+    .card-bg--3 { background: radial-gradient(circle at 60% 30%, rgba(20,22,10,0.7) 0%, transparent 50%), radial-gradient(circle at 15% 70%, rgba(15,18,8,0.8) 0%, transparent 45%), linear-gradient(140deg, #111408 0%, #0c0f06 50%, #141808 75%, #0a0c06 100%); }
+    .card-bg--4 { background: radial-gradient(ellipse 70% 60% at 40% 50%, rgba(28,22,12,0.8) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(20,16,8,0.5) 0%, transparent 40%), linear-gradient(120deg, #181208 0%, #100e06 50%, #1c1610 75%, #0e0c06 100%); }
+    .card-bg--5 { background: radial-gradient(circle at 50% 50%, rgba(30,10,8,0.6) 0%, transparent 50%), radial-gradient(ellipse 80% 60% at 20% 40%, rgba(22,8,6,0.7) 0%, transparent 55%), linear-gradient(155deg, #160808 0%, #100606 50%, #1a0a08 75%, #0c0606 100%); }
+    .card-bg--6 { background: radial-gradient(ellipse 90% 50% at 50% 0%, rgba(12,14,22,0.9) 0%, transparent 55%), radial-gradient(circle at 75% 60%, rgba(8,10,18,0.6) 0%, transparent 45%), linear-gradient(165deg, #0c0e18 0%, #080a14 45%, #0e1018 70%, #060810 100%); }
+    .card-bg--7 { background: radial-gradient(ellipse 70% 60% at 30% 60%, rgba(28,24,14,0.8) 0%, transparent 55%), radial-gradient(circle at 80% 30%, rgba(22,18,10,0.5) 0%, transparent 40%), linear-gradient(150deg, #1a160c 0%, #120e08 50%, #1e1a0e 75%, #0e0c06 100%); }
+    .card-bg--8 { background: radial-gradient(circle at 50% 30%, rgba(12,8,16,0.85) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 10% 80%, rgba(8,6,12,0.8) 0%, transparent 50%), linear-gradient(135deg, #100a14 0%, #0a0810 50%, #140c18 75%, #080610 100%); }
+
+    /* ═══════════════════════════════════════════════
+       PAGINATION
+    ═══════════════════════════════════════════════ */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 0 48px 64px;
+    }
+
+    .pagination-btn {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 0;
+      padding: 0 12px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .pagination-btn:hover:not(.active):not(.ellipsis) {
+      background: var(--color-surface-2);
+      color: var(--color-text);
+      border-color: var(--color-muted);
+    }
+
+    .pagination-btn.active {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #ffffff;
+      cursor: default;
+    }
+
+    .pagination-btn.ellipsis {
+      border-color: transparent;
+      background: transparent;
+      cursor: default;
+    }
+
+    .pagination-btn.nav-btn {
+      letter-spacing: 0.14em;
+      padding: 0 16px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       APP FOOTER
+    ═══════════════════════════════════════════════ */
+    .app-footer {
+      background: var(--color-surface);
+      border-top: 1px dashed var(--color-accent);
+      padding: 40px 48px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .footer-brand { display: flex; flex-direction: column; gap: 8px; }
+
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      animation: flicker 14s 5s infinite;
+      user-select: none;
+    }
+
+    .footer-tagline {
+      font-family: var(--font-quote);
+      font-size: 13px;
+      font-style: italic;
+      color: var(--color-muted);
+    }
+
+    .footer-nav { display: flex; gap: 32px; justify-content: center; align-items: center; }
+
+    .footer-nav a {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      transition: color 0.2s;
+    }
+
+    .footer-nav a:hover { color: var(--color-text); }
+
+    .footer-stamp {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-classified);
+      border: 1px solid rgba(255, 102, 0, 0.3);
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      justify-self: end;
+      opacity: 0.55;
+      user-select: none;
+    }
+
+    .footer-bottom {
+      background: var(--color-surface);
+      padding: 16px 48px;
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-copy, .footer-version {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--color-border);
+      text-transform: uppercase;
+    }
+
+    /* ═══════════════════════════════════════════════
+       MOBILE — 390px
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .app-header { padding: 0 20px; }
+      .header-nav { display: none; }
+      .hamburger { display: flex; }
+
+      .page-title { font-size: 64px; letter-spacing: 0.08em; }
+      .page-header { height: 240px; }
+      .page-header-content { padding: 0 20px; }
+
+      .filters-bar-main {
+        padding: 0 20px;
+        height: auto;
+        min-height: 56px;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+
+      .search-input {
+        width: 100%;
+      }
+
+      .search-input-wrap {
+        width: 100%;
+        order: 0;
+      }
+
+      .filter-buttons {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        order: 1;
+        scrollbar-width: none;
+        width: 100%;
+        padding-bottom: 4px;
+      }
+
+      .filter-buttons::-webkit-scrollbar { display: none; }
+
+      .view-toggle {
+        order: 2;
+        margin-left: auto;
+      }
+
+      .active-filters { padding: 8px 20px; }
+
+      .results-area { padding: 28px 20px 48px; }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .list-classification { display: none; }
+      .list-case-id { width: 80px; font-size: 8.5px; }
+
+      .pagination { padding: 0 20px 48px; flex-wrap: wrap; }
+
+      .app-footer {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 32px 20px;
+        text-align: center;
+      }
+      .footer-nav { flex-direction: column; gap: 14px; }
+      .footer-stamp { justify-self: center; }
+      .footer-bottom { padding: 14px 20px; flex-direction: column; gap: 6px; text-align: center; }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="film-grain" aria-hidden="true"></div>
+<div class="scanline-overlay" aria-hidden="true"></div>
+
+<!-- ═══ APP HEADER ═══ -->
+<header class="app-header" id="app-header" role="banner">
+  <a href="/" class="header-logo" aria-label="Obscura — inicio">
+    OBSC<span class="logo-u-wrap">U<span class="logo-red-dot" aria-hidden="true"></span></span>RA
+  </a>
+
+  <nav class="header-nav" aria-label="Navegación principal">
+    <a href="/explorar" class="active">EXPLORAR</a>
+    <a href="/mapa">MAPA</a>
+    <a href="/cronologia">CRONOLOGÍA</a>
+  </nav>
+
+  <div class="header-actions">
+    <button class="search-btn" id="header-search-btn" aria-label="Buscar (Cmd+K)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <circle cx="7" cy="7" r="4.5"/>
+        <path d="M10.5 10.5L14 14" stroke-linecap="round"/>
+      </svg>
+      BUSCAR
+    </button>
+    <button class="login-btn">LOGIN</button>
+    <button class="hamburger" id="hamburger-btn" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ PAGE HEADER ═══ -->
+<section class="page-header" aria-label="Explorador de casos">
+  <div class="page-header-bg" aria-hidden="true"></div>
+  <div class="page-header-grid" aria-hidden="true"></div>
+  <div class="page-header-vignette" aria-hidden="true"></div>
+  <div class="page-header-content">
+    <div class="page-header-id" aria-hidden="true">// ARCHIVO — EXPLORADOR DE CASOS</div>
+    <h1 class="page-title" id="page-title" aria-label="Explorar">EXPLORAR</h1>
+    <div class="page-header-count" id="page-header-count" role="status">847 EXPEDIENTES ARCHIVADOS</div>
+  </div>
+</section>
+
+<!-- ═══ SEARCH + FILTERS BAR ═══ -->
+<div class="filters-bar" id="filters-bar" role="search">
+  <div class="filters-bar-main">
+
+    <!-- Search input -->
+    <div class="search-input-wrap">
+      <input
+        type="text"
+        class="search-input"
+        id="main-search"
+        placeholder="// buscar en el archivo..."
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Buscar en el archivo"
+      >
+      <span class="search-input-prompt" aria-hidden="true">_</span>
+    </div>
+
+    <!-- Filter buttons -->
+    <div class="filter-buttons" role="toolbar" aria-label="Filtros">
+
+      <div style="position:relative;">
+        <button class="filter-btn" id="btn-categoria" data-filter="categoria" aria-haspopup="listbox" aria-expanded="false">
+          CATEGORÍA <span class="filter-btn-arrow" aria-hidden="true">▾</span>
+        </button>
+        <div class="dropdown-panel" id="drop-categoria" role="listbox" aria-label="Categoría">
+          <button class="dropdown-item" data-value="PARANORMAL"><span class="dropdown-item-dot"></span>PARANORMAL</button>
+          <button class="dropdown-item" data-value="CRIMEN"><span class="dropdown-item-dot"></span>CRIMEN</button>
+          <button class="dropdown-item" data-value="DESAPARICIÓN"><span class="dropdown-item-dot"></span>DESAPARICIÓN</button>
+          <button class="dropdown-item" data-value="OCULTISMO"><span class="dropdown-item-dot"></span>OCULTISMO</button>
+          <button class="dropdown-item" data-value="FENÓMENO"><span class="dropdown-item-dot"></span>FENÓMENO</button>
+          <button class="dropdown-item" data-value="CONSPIRACIÓN"><span class="dropdown-item-dot"></span>CONSPIRACIÓN</button>
+        </div>
+      </div>
+
+      <div style="position:relative;">
+        <button class="filter-btn" id="btn-pais" data-filter="pais" aria-haspopup="listbox" aria-expanded="false">
+          PAÍS <span class="filter-btn-arrow" aria-hidden="true">▾</span>
+        </button>
+        <div class="dropdown-panel" id="drop-pais" role="listbox" aria-label="País">
+          <button class="dropdown-item" data-value="ESPAÑA"><span class="dropdown-item-dot"></span>ESPAÑA</button>
+          <button class="dropdown-item" data-value="RUSIA"><span class="dropdown-item-dot"></span>RUSIA</button>
+          <button class="dropdown-item" data-value="EEUU"><span class="dropdown-item-dot"></span>EEUU</button>
+          <button class="dropdown-item" data-value="MEXICO"><span class="dropdown-item-dot"></span>MEXICO</button>
+          <button class="dropdown-item" data-value="ALEMANIA"><span class="dropdown-item-dot"></span>ALEMANIA</button>
+          <button class="dropdown-item" data-value="JAPÓN"><span class="dropdown-item-dot"></span>JAPÓN</button>
+          <button class="dropdown-item" data-value="ARGENTINA"><span class="dropdown-item-dot"></span>ARGENTINA</button>
+        </div>
+      </div>
+
+      <div style="position:relative;">
+        <button class="filter-btn" id="btn-estado" data-filter="estado" aria-haspopup="listbox" aria-expanded="false">
+          ESTADO <span class="filter-btn-arrow" aria-hidden="true">▾</span>
+        </button>
+        <div class="dropdown-panel" id="drop-estado" role="listbox" aria-label="Estado">
+          <button class="dropdown-item" data-value="CASO ABIERTO"><span class="dropdown-item-dot"></span>CASO ABIERTO</button>
+          <button class="dropdown-item" data-value="ARCHIVADO"><span class="dropdown-item-dot"></span>ARCHIVADO</button>
+          <button class="dropdown-item" data-value="SIN RESOLVER"><span class="dropdown-item-dot"></span>SIN RESOLVER</button>
+          <button class="dropdown-item" data-value="CLASIFICADO"><span class="dropdown-item-dot"></span>CLASIFICADO</button>
+        </div>
+      </div>
+
+      <div style="position:relative;">
+        <button class="filter-btn" id="btn-clasificacion" data-filter="clasificacion" aria-haspopup="listbox" aria-expanded="false">
+          CLASIFICACIÓN <span class="filter-btn-arrow" aria-hidden="true">▾</span>
+        </button>
+        <div class="dropdown-panel" id="drop-clasificacion" role="listbox" aria-label="Clasificación">
+          <button class="dropdown-item" data-value="BAJO"><span class="dropdown-item-dot"></span>BAJO</button>
+          <button class="dropdown-item" data-value="MEDIO"><span class="dropdown-item-dot"></span>MEDIO</button>
+          <button class="dropdown-item" data-value="ALTO"><span class="dropdown-item-dot"></span>ALTO</button>
+          <button class="dropdown-item" data-value="EXTREMO"><span class="dropdown-item-dot"></span>EXTREMO</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- View toggle -->
+    <div class="view-toggle" aria-label="Cambiar vista">
+      <button class="view-btn active" id="view-grid-btn" aria-label="Vista en cuadrícula" aria-pressed="true">
+        <svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+          <rect x="0" y="0" width="6" height="6"/><rect x="8" y="0" width="6" height="6"/>
+          <rect x="0" y="8" width="6" height="6"/><rect x="8" y="8" width="6" height="6"/>
+        </svg>
+      </button>
+      <button class="view-btn" id="view-list-btn" aria-label="Vista en lista" aria-pressed="false">
+        <svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+          <rect x="0" y="1" width="14" height="2"/>
+          <rect x="0" y="6" width="14" height="2"/>
+          <rect x="0" y="11" width="14" height="2"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Active filter tags -->
+  <div class="active-filters" id="active-filters" aria-live="polite" aria-label="Filtros activos"></div>
+</div>
+
+<!-- ═══ RESULTS AREA ═══ -->
+<main class="results-area" id="results-area" data-query="">
+
+  <!-- Results header -->
+  <div class="results-header">
+    <div class="results-count" id="results-count" role="status">MOSTRANDO 24 DE 847</div>
+    <div class="sort-wrap">
+      <button class="sort-btn" id="sort-btn" aria-haspopup="listbox" aria-expanded="false">
+        ORDENAR: <span id="sort-label">MÁS RECIENTE</span> <span aria-hidden="true" style="font-size:8px;margin-left:4px;">▾</span>
+      </button>
+      <div class="sort-dropdown" id="sort-dropdown" role="listbox" aria-label="Ordenar por">
+        <button class="sort-option selected" data-sort="reciente">MÁS RECIENTE</button>
+        <button class="sort-option" data-sort="antiguo">MÁS ANTIGUO</button>
+        <button class="sort-option" data-sort="visto">MÁS VISTO</button>
+        <button class="sort-option" data-sort="valorado">MEJOR VALORADO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid view -->
+  <div class="results-grid" id="results-grid" aria-label="Resultados en cuadrícula">
+
+    <!-- Card 1 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="La Masacre del Paso Dyatlov">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--1"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--sin-resolver">SIN RESOLVER</span>
+        <span class="card-classification classification--extremo">EXTREMO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-1959-0012</div>
+        <h2 class="card-title">La Masacre del Paso Dyatlov</h2>
+        <div class="card-meta">
+          <span>1959</span>
+          <span class="card-meta-sep">/</span>
+          <span>RU</span>
+          <span class="card-meta-sep">/</span>
+          <span>FENÓMENO</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Card 2 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="El Manuscrito Voynich">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--2"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--archivado">ARCHIVADO</span>
+        <span class="card-classification classification--alto">ALTO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-1912-0003</div>
+        <h2 class="card-title">El Manuscrito Voynich</h2>
+        <div class="card-meta">
+          <span>c.1404</span>
+          <span class="card-meta-sep">/</span>
+          <span>ES</span>
+          <span class="card-meta-sep">/</span>
+          <span>OCULTISMO</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Card 3 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="La Desaparición de Amelia Earhart">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--3"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--sin-resolver">SIN RESOLVER</span>
+        <span class="card-classification classification--medio">MEDIO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-1937-0007</div>
+        <h2 class="card-title">La Desaparición de Amelia Earhart</h2>
+        <div class="card-meta">
+          <span>1937</span>
+          <span class="card-meta-sep">/</span>
+          <span>US</span>
+          <span class="card-meta-sep">/</span>
+          <span>DESAPARICIÓN</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Card 4 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="El Incidente de Roswell">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--4"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--clasificado">CLASIFICADO</span>
+        <span class="card-classification classification--extremo">EXTREMO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-1947-0022</div>
+        <h2 class="card-title">El Incidente de Roswell</h2>
+        <div class="card-meta">
+          <span>1947</span>
+          <span class="card-meta-sep">/</span>
+          <span>US</span>
+          <span class="card-meta-sep">/</span>
+          <span>FENÓMENO</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Card 5 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="El Caso de Elisa Lam">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--5"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--archivado">ARCHIVADO</span>
+        <span class="card-classification classification--alto">ALTO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-2013-0089</div>
+        <h2 class="card-title">El Caso de Elisa Lam</h2>
+        <div class="card-meta">
+          <span>2013</span>
+          <span class="card-meta-sep">/</span>
+          <span>US</span>
+          <span class="card-meta-sep">/</span>
+          <span>CRIMEN</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Card 6 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="La Ciudad Perdida de El Dorado">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--6"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--sin-resolver">SIN RESOLVER</span>
+        <span class="card-classification classification--medio">MEDIO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-1530-0001</div>
+        <h2 class="card-title">La Ciudad Perdida de El Dorado</h2>
+        <div class="card-meta">
+          <span>c.1530</span>
+          <span class="card-meta-sep">/</span>
+          <span>AR</span>
+          <span class="card-meta-sep">/</span>
+          <span>CONSPIRACIÓN</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Card 7 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="El Experimento MKUltra">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--7"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--clasificado">CLASIFICADO</span>
+        <span class="card-classification classification--extremo">EXTREMO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-1953-0019</div>
+        <h2 class="card-title">El Experimento MKUltra</h2>
+        <div class="card-meta">
+          <span>1953</span>
+          <span class="card-meta-sep">/</span>
+          <span>US</span>
+          <span class="card-meta-sep">/</span>
+          <span>CONSPIRACIÓN</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Card 8 -->
+    <article class="mystery-card slide-up" tabindex="0" aria-label="Los Documentos de Majestic-12">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--8"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--clasificado">CLASIFICADO</span>
+        <span class="card-classification classification--extremo">EXTREMO</span>
+      </div>
+      <div class="card-body">
+        <div class="card-case-id">OBX-1947-0023</div>
+        <h2 class="card-title">Los Documentos de Majestic-12</h2>
+        <div class="card-meta">
+          <span>1947</span>
+          <span class="card-meta-sep">/</span>
+          <span>US</span>
+          <span class="card-meta-sep">/</span>
+          <span>CONSPIRACIÓN</span>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- List view -->
+  <div class="results-list" id="results-list" aria-label="Resultados en lista">
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1959-0012 — La Masacre del Paso Dyatlov">
+      <span class="list-dot dot--sin-resolver" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1959-0012</span>
+      <span class="list-title">La Masacre del Paso Dyatlov</span>
+      <span class="list-country">RU</span>
+      <span class="list-year">1959</span>
+      <span class="list-category">FENÓMENO</span>
+      <span class="list-classification badge--sin-resolver">SIN RESOLVER</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1912-0003 — El Manuscrito Voynich">
+      <span class="list-dot dot--archivado" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1912-0003</span>
+      <span class="list-title">El Manuscrito Voynich</span>
+      <span class="list-country">ES</span>
+      <span class="list-year">c.1404</span>
+      <span class="list-category">OCULTISMO</span>
+      <span class="list-classification badge--archivado">ARCHIVADO</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1937-0007 — La Desaparición de Amelia Earhart">
+      <span class="list-dot dot--sin-resolver" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1937-0007</span>
+      <span class="list-title">La Desaparición de Amelia Earhart</span>
+      <span class="list-country">US</span>
+      <span class="list-year">1937</span>
+      <span class="list-category">DESAPARICIÓN</span>
+      <span class="list-classification badge--sin-resolver">SIN RESOLVER</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1947-0022 — El Incidente de Roswell">
+      <span class="list-dot dot--clasificado" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1947-0022</span>
+      <span class="list-title">El Incidente de Roswell</span>
+      <span class="list-country">US</span>
+      <span class="list-year">1947</span>
+      <span class="list-category">FENÓMENO</span>
+      <span class="list-classification badge--clasificado">CLASIFICADO</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-2013-0089 — El Caso de Elisa Lam">
+      <span class="list-dot dot--archivado" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-2013-0089</span>
+      <span class="list-title">El Caso de Elisa Lam</span>
+      <span class="list-country">US</span>
+      <span class="list-year">2013</span>
+      <span class="list-category">CRIMEN</span>
+      <span class="list-classification badge--archivado">ARCHIVADO</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1530-0001 — La Ciudad Perdida de El Dorado">
+      <span class="list-dot dot--sin-resolver" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1530-0001</span>
+      <span class="list-title">La Ciudad Perdida de El Dorado</span>
+      <span class="list-country">AR</span>
+      <span class="list-year">c.1530</span>
+      <span class="list-category">CONSPIRACIÓN</span>
+      <span class="list-classification badge--sin-resolver">SIN RESOLVER</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1953-0019 — El Experimento MKUltra">
+      <span class="list-dot dot--clasificado" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1953-0019</span>
+      <span class="list-title">El Experimento MKUltra</span>
+      <span class="list-country">US</span>
+      <span class="list-year">1953</span>
+      <span class="list-category">CONSPIRACIÓN</span>
+      <span class="list-classification badge--clasificado">CLASIFICADO</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1947-0023 — Los Documentos de Majestic-12">
+      <span class="list-dot dot--clasificado" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1947-0023</span>
+      <span class="list-title">Los Documentos de Majestic-12</span>
+      <span class="list-country">US</span>
+      <span class="list-year">1947</span>
+      <span class="list-category">CONSPIRACIÓN</span>
+      <span class="list-classification badge--clasificado">CLASIFICADO</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1978-0044 — La Masacre de Jonestown">
+      <span class="list-dot dot--archivado" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1978-0044</span>
+      <span class="list-title">La Masacre de Jonestown</span>
+      <span class="list-country">US</span>
+      <span class="list-year">1978</span>
+      <span class="list-category">OCULTISMO</span>
+      <span class="list-classification badge--archivado">ARCHIVADO</span>
+    </div>
+
+    <div class="list-row" tabindex="0" role="link" aria-label="OBX-1977-0031 — El Poltergeist de Enfield">
+      <span class="list-dot dot--archivado" aria-hidden="true"></span>
+      <span class="list-case-id">OBX-1977-0031</span>
+      <span class="list-title">El Poltergeist de Enfield</span>
+      <span class="list-country">UK</span>
+      <span class="list-year">1977</span>
+      <span class="list-category">PARANORMAL</span>
+      <span class="list-classification badge--archivado">ARCHIVADO</span>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ═══ PAGINATION ═══ -->
+<nav class="pagination" aria-label="Páginas de resultados">
+  <button class="pagination-btn nav-btn">← ANTERIOR</button>
+  <button class="pagination-btn active" aria-current="page" aria-label="Página 1">1</button>
+  <button class="pagination-btn" aria-label="Página 2">2</button>
+  <button class="pagination-btn" aria-label="Página 3">3</button>
+  <button class="pagination-btn ellipsis" aria-hidden="true">...</button>
+  <button class="pagination-btn" aria-label="Página 34">34</button>
+  <button class="pagination-btn nav-btn">SIGUIENTE →</button>
+</nav>
+
+<!-- ═══ APP FOOTER ═══ -->
+<footer class="app-footer" role="contentinfo">
+  <div class="footer-brand">
+    <div class="footer-logo">OBSCURA</div>
+    <p class="footer-tagline">Algunos archivos no deberían existir.</p>
+  </div>
+  <nav class="footer-nav" aria-label="Navegación del pie">
+    <a href="/explorar">EXPLORAR</a>
+    <a href="/mapa">MAPA</a>
+    <a href="/cronologia">CRONOLOGÍA</a>
+    <a href="/acerca">ACERCA</a>
+  </nav>
+  <div class="footer-stamp">CLASIFICADO — USO INTERNO</div>
+</footer>
+
+<div class="footer-bottom">
+  <span class="footer-copy">© 2024 OBSCURA ARCHIVE PROJECT</span>
+  <span class="footer-version">SISTEMA v2.4.1 — ACCESO RESTRINGIDO</span>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Header scroll ── */
+  var header = document.getElementById('app-header');
+  var ticking = false;
+  function updateHeader() {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
+  }, { passive: true });
+
+  /* ── decryptTitle — exact pattern from obscura-home.html ── */
+  var DECRYPT_GLYPHS = '█▓▒░╬╫╩╦╣╠═╚╗▀▄■□×+@#$%!?~^';
+
+  function decryptTitle(el, totalMs) {
+    totalMs = totalMs || 1200;
+
+    // Collect segments preserving <br> and spaces
+    var segments = [];
+    el.childNodes.forEach(function (node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        node.textContent.split('').forEach(function (c) {
+          segments.push(c === ' ' ? { type: 'space' } : { type: 'char', real: c });
+        });
+      } else if (node.nodeName === 'BR') {
+        segments.push({ type: 'br' });
+      }
+    });
+
+    var charSegs = segments.filter(function (s) { return s.type === 'char'; });
+    var N = charSegs.length;
+    if (N === 0) { el.style.opacity = '1'; el.classList.add('flicker-anim'); return; }
+
+    // Rebuild DOM: one <span> per real character
+    var html = '';
+    var ci = 0;
+    segments.forEach(function (s) {
+      if (s.type === 'br') { html += '<br>'; }
+      else if (s.type === 'space') { html += ' '; }
+      else {
+        var escaped = s.real.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        html += '<span class="dc-c" data-r="' + escaped + '" data-ci="' + ci + '"></span>';
+        ci++;
+      }
+    });
+    el.innerHTML = html;
+    el.style.opacity = '1';
+    el.style.filter = 'none';
+
+    var spans = Array.prototype.slice.call(el.querySelectorAll('.dc-c'));
+
+    // All chars start scrambling immediately
+    var intervals = spans.map(function (span) {
+      span.textContent = DECRYPT_GLYPHS[Math.floor(Math.random() * DECRYPT_GLYPHS.length)];
+      return setInterval(function () {
+        span.textContent = DECRYPT_GLYPHS[Math.floor(Math.random() * DECRYPT_GLYPHS.length)];
+      }, 45);
+    });
+
+    // Each char locks at a staggered time (left → right)
+    spans.forEach(function (span, i) {
+      var lockAt = N === 1 ? totalMs * 0.6 : (i / (N - 1)) * (totalMs - 80) + 80;
+      setTimeout(function () {
+        clearInterval(intervals[i]);
+        span.textContent = span.dataset.r;
+      }, lockAt);
+    });
+
+    // After last char locks, enter flicker loop
+    setTimeout(function () {
+      el.classList.add('flicker-anim');
+    }, totalMs + 120);
+  }
+
+  var pageTitle = document.getElementById('page-title');
+  if (pageTitle) setTimeout(function () { decryptTitle(pageTitle, 1200); }, 600);
+
+  /* ── Filter dropdown logic ── */
+  var filterMap = {
+    'btn-categoria':    'drop-categoria',
+    'btn-pais':         'drop-pais',
+    'btn-estado':       'drop-estado',
+    'btn-clasificacion':'drop-clasificacion'
+  };
+
+  var activeFilters = {};   // { filterKey: selectedValue }
+  var openDropdown = null;  // id of currently open dropdown panel
+
+  function closeAllDropdowns() {
+    Object.keys(filterMap).forEach(function (btnId) {
+      var btn = document.getElementById(btnId);
+      var drop = document.getElementById(filterMap[btnId]);
+      if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+      if (drop) { drop.classList.remove('open'); }
+    });
+    openDropdown = null;
+  }
+
+  Object.keys(filterMap).forEach(function (btnId) {
+    var btn = document.getElementById(btnId);
+    var dropId = filterMap[btnId];
+    var drop = document.getElementById(dropId);
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isOpen = drop.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) {
+        drop.classList.add('open');
+        btn.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        openDropdown = dropId;
+      }
+    });
+
+    // Dropdown item clicks
+    drop.querySelectorAll('.dropdown-item').forEach(function (item) {
+      item.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var value = item.dataset.value;
+        var filterKey = btn.dataset.filter;
+
+        // Toggle selection
+        if (item.classList.contains('selected')) {
+          item.classList.remove('selected');
+          delete activeFilters[filterKey + ':' + value];
+          btn.classList.remove('active');
+          removeFilterTag(filterKey, value);
+        } else {
+          item.classList.add('selected');
+          activeFilters[filterKey + ':' + value] = { key: filterKey, value: value, btnId: btnId };
+          btn.classList.add('active');
+          addFilterTag(filterKey, value, btnId);
+        }
+
+        closeAllDropdowns();
+        updateResultsCount();
+      });
+    });
+  });
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', function () {
+    closeAllDropdowns();
+  });
+
+  /* ── Filter tag management ── */
+  var activeFiltersEl = document.getElementById('active-filters');
+
+  function addFilterTag(key, value, btnId) {
+    var tagId = 'tag-' + key + '-' + value.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+    if (document.getElementById(tagId)) return;
+
+    var tag = document.createElement('span');
+    tag.className = 'filter-tag';
+    tag.id = tagId;
+    tag.setAttribute('data-key', key);
+    tag.setAttribute('data-value', value);
+    tag.setAttribute('data-btn', btnId);
+
+    var label = document.createTextNode(key.toUpperCase() + ': ' + value);
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'filter-tag-remove';
+    removeBtn.textContent = '×';
+    removeBtn.setAttribute('aria-label', 'Eliminar filtro ' + value);
+    removeBtn.addEventListener('click', function () {
+      // Deselect in dropdown
+      var drop = document.getElementById(filterMap[btnId]);
+      if (drop) {
+        drop.querySelectorAll('.dropdown-item').forEach(function (item) {
+          if (item.dataset.value === value) item.classList.remove('selected');
+        });
+      }
+      // Remove active class from btn if no more selections
+      var btn = document.getElementById(btnId);
+      var drop2 = document.getElementById(filterMap[btnId]);
+      var anySelected = drop2 ? drop2.querySelector('.dropdown-item.selected') : null;
+      if (btn && !anySelected) btn.classList.remove('active');
+
+      delete activeFilters[key + ':' + value];
+      tag.remove();
+      updateActiveFiltersVisibility();
+      updateResultsCount();
+    });
+
+    tag.appendChild(label);
+    tag.appendChild(removeBtn);
+    activeFiltersEl.appendChild(tag);
+    updateActiveFiltersVisibility();
+  }
+
+  function removeFilterTag(key, value) {
+    var tagId = 'tag-' + key + '-' + value.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+    var tag = document.getElementById(tagId);
+    if (tag) tag.remove();
+    updateActiveFiltersVisibility();
+  }
+
+  function updateActiveFiltersVisibility() {
+    if (activeFiltersEl.children.length > 0) {
+      activeFiltersEl.classList.add('visible');
+    } else {
+      activeFiltersEl.classList.remove('visible');
+    }
+  }
+
+  /* ── View toggle ── */
+  var gridBtn = document.getElementById('view-grid-btn');
+  var listBtn = document.getElementById('view-list-btn');
+  var resultsGrid = document.getElementById('results-grid');
+  var resultsList = document.getElementById('results-list');
+
+  gridBtn.addEventListener('click', function () {
+    gridBtn.classList.add('active');
+    gridBtn.setAttribute('aria-pressed', 'true');
+    listBtn.classList.remove('active');
+    listBtn.setAttribute('aria-pressed', 'false');
+    resultsGrid.style.display = 'grid';
+    resultsList.classList.remove('visible');
+  });
+
+  listBtn.addEventListener('click', function () {
+    listBtn.classList.add('active');
+    listBtn.setAttribute('aria-pressed', 'true');
+    gridBtn.classList.remove('active');
+    gridBtn.setAttribute('aria-pressed', 'false');
+    resultsGrid.style.display = 'none';
+    resultsList.classList.add('visible');
+  });
+
+  /* ── Sort dropdown ── */
+  var sortBtn = document.getElementById('sort-btn');
+  var sortDropdown = document.getElementById('sort-dropdown');
+  var sortLabel = document.getElementById('sort-label');
+
+  sortBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var isOpen = sortDropdown.classList.contains('open');
+    closeAllDropdowns();
+    if (!isOpen) {
+      sortDropdown.classList.toggle('open');
+      sortBtn.setAttribute('aria-expanded', sortDropdown.classList.contains('open').toString());
+    }
+  });
+
+  sortDropdown.querySelectorAll('.sort-option').forEach(function (opt) {
+    opt.addEventListener('click', function (e) {
+      e.stopPropagation();
+      sortDropdown.querySelectorAll('.sort-option').forEach(function (o) { o.classList.remove('selected'); });
+      opt.classList.add('selected');
+      sortLabel.textContent = opt.textContent;
+      sortDropdown.classList.remove('open');
+      sortBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  document.addEventListener('click', function () {
+    sortDropdown.classList.remove('open');
+    sortBtn.setAttribute('aria-expanded', 'false');
+  });
+
+  sortDropdown.addEventListener('click', function (e) { e.stopPropagation(); });
+
+  /* ── Search debounce ── */
+  var searchInput = document.getElementById('main-search');
+  var resultsCount = document.getElementById('results-count');
+  var searchTimer = null;
+  var defaultCount = 'MOSTRANDO 24 DE 847';
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    var q = searchInput.value.trim();
+
+    if (q.length > 0) {
+      resultsCount.textContent = 'BUSCANDO...';
+      document.getElementById('results-area').setAttribute('data-query', q);
+      searchTimer = setTimeout(function () {
+        // Simulate filtered count — just show a plausible smaller number
+        var fakeCount = Math.max(1, Math.floor(Math.random() * 24) + 1);
+        resultsCount.textContent = 'MOSTRANDO ' + fakeCount + ' DE 847';
+      }, 600);
+    } else {
+      document.getElementById('results-area').setAttribute('data-query', '');
+      resultsCount.textContent = defaultCount;
+    }
+  });
+
+  function updateResultsCount() {
+    var filterCount = Object.keys(activeFilters).length;
+    if (filterCount > 0) {
+      var fakeCount = Math.max(8, 24 - filterCount * 4);
+      resultsCount.textContent = 'MOSTRANDO ' + fakeCount + ' DE 847';
+    } else {
+      resultsCount.textContent = defaultCount;
+    }
+  }
+
+  /* ── Hamburger mobile nav ── */
+  var hamburger = document.getElementById('hamburger-btn');
+  var mobileOpen = false;
+  if (hamburger) {
+    hamburger.addEventListener('click', function () {
+      mobileOpen = !mobileOpen;
+      var existing = document.getElementById('mobile-nav');
+      if (mobileOpen) {
+        var nav = document.createElement('nav');
+        nav.id = 'mobile-nav';
+        nav.style.cssText = 'position:fixed;top:var(--header-h);left:0;right:0;background:rgba(15,15,15,0.98);border-bottom:1px solid #1f1f1f;padding:28px 20px;display:flex;flex-direction:column;gap:20px;z-index:199;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
+        [['EXPLORAR', '/explorar'], ['MAPA', '/mapa'], ['CRONOLOGÍA', '/cronologia']].forEach(function (item) {
+          var a = document.createElement('a');
+          a.href = item[1];
+          a.textContent = item[0];
+          a.style.cssText = 'font-family:var(--font-mono);font-size:13px;letter-spacing:0.2em;color:#888;text-transform:uppercase;';
+          if (item[0] === 'EXPLORAR') a.style.color = '#c0c0c0';
+          nav.appendChild(a);
+        });
+        document.body.appendChild(nav);
+      } else if (existing) {
+        existing.remove();
+      }
+    });
+  }
+
+  /* ── Prevent sort dropdown close when clicking inside ── */
+  // (already handled above with stopPropagation)
+
+})();
+</script>
+
+</body>
+</html>
