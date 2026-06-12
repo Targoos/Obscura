@@ -1,0 +1,1186 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBSCURA — Algunos archivos no deberían existir.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=Crimson+Text:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS — Obscura v1.0
+    ═══════════════════════════════════════════════ */
+    :root {
+      --color-bg:           #080808;
+      --color-surface:      #0f0f0f;
+      --color-surface-2:    #161616;
+      --color-border:       #1f1f1f;
+      --color-muted:        #444444;
+      --color-text:         #d4d4d4;
+      --color-accent:       #cc0000;
+      --color-accent-dim:   #7a0000;
+      --color-classified:   #ff6600;
+      --color-open:         #22994d;
+
+      --font-display: 'Cinzel', 'Times New Roman', serif;
+      --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+      --font-mono:    'IBM Plex Mono', 'Menlo', monospace;
+      --font-quote:   'Crimson Text', Georgia, serif;
+
+      --radius:    4px;
+      --header-h:  64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    body { background: var(--color-bg); position: relative; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ═══════════════════════════════════════════════
+       KEYFRAMES
+    ═══════════════════════════════════════════════ */
+    @keyframes flicker {
+      0%, 89%, 91%, 93%, 95%, 97%, 100% { opacity: 1; }
+      90%  { opacity: 0.35; }
+      92%  { opacity: 0.8; }
+      94%  { opacity: 0.3; }
+      96%  { opacity: 0.9; }
+    }
+
+    @keyframes flickerFast {
+      0%, 94%, 96%, 100% { opacity: 1; }
+      95% { opacity: 0.2; }
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes stampIn {
+      from { opacity: 0; transform: rotate(-3deg) scale(0.85); }
+      to   { opacity: 1; transform: rotate(-3deg) scale(1); }
+    }
+
+    @keyframes badgeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes scanline {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(200vh); }
+    }
+
+    /* ═══════════════════════════════════════════════
+       FILM GRAIN + SCANLINE
+    ═══════════════════════════════════════════════ */
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23g)'/%3E%3C/svg%3E");
+      background-size: 400px 400px;
+    }
+
+    .scanline {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      overflow: hidden;
+    }
+    .scanline::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 200px;
+      background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(255,255,255,0.008) 40%,
+        rgba(255,255,255,0.012) 50%,
+        rgba(255,255,255,0.008) 60%,
+        transparent 100%);
+      animation: scanline 16s linear infinite;
+    }
+
+    /* ═══════════════════════════════════════════════
+       APP HEADER
+    ═══════════════════════════════════════════════ */
+    .app-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 48px;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background 0.35s ease, border-color 0.35s ease, backdrop-filter 0.35s ease;
+    }
+
+    .app-header.scrolled {
+      background: rgba(15, 15, 15, 0.92);
+      border-bottom-color: var(--color-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .header-logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      animation: flicker 12s 2s infinite;
+      display: flex;
+      align-items: baseline;
+      user-select: none;
+    }
+
+    .logo-u-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .logo-red-dot {
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      animation: flickerFast 6s 1s infinite;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin: 0 auto;
+    }
+
+    .header-nav a {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .header-nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0; right: 0;
+      height: 1px;
+      background: var(--color-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.25s ease;
+    }
+
+    .header-nav a:hover { color: var(--color-text); }
+    .header-nav a:hover::after { transform: scaleX(1); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid var(--color-border);
+      color: var(--color-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .search-btn:hover { border-color: var(--color-muted); color: var(--color-text); }
+    .search-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .search-kbd {
+      border: 1px solid var(--color-border);
+      border-radius: 2px;
+      padding: 1px 4px;
+      font-size: 9px;
+      color: var(--color-border);
+    }
+
+    .login-btn {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: none;
+      border: 1px solid var(--color-accent);
+      padding: 8px 20px;
+      border-radius: var(--radius);
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    .login-btn:hover {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      padding: 6px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--color-text);
+    }
+
+    /* ═══════════════════════════════════════════════
+       HERO — CASO DEL DÍA
+    ═══════════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      height: 100vh;
+      min-height: 640px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 110% 55% at 50% 0%, rgba(28, 22, 16, 0.9) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 90% at 0% 50%, rgba(12, 10, 8, 0.85) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 70% at 100% 30%, rgba(22, 16, 12, 0.7) 0%, transparent 55%),
+        radial-gradient(ellipse 90% 75% at 50% 60%, rgba(18, 14, 11, 1) 0%, #080808 80%);
+    }
+
+    .hero-env {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 19.9%, rgba(255,255,255,0.008) 20%, rgba(255,255,255,0.008) 20.1%, transparent 20.1%),
+        linear-gradient(90deg, transparent 79.9%, rgba(255,255,255,0.008) 80%, rgba(255,255,255,0.008) 80.1%, transparent 80.1%),
+        linear-gradient(180deg, transparent 34.9%, rgba(255,255,255,0.005) 35%, transparent 35.1%),
+        radial-gradient(ellipse 30% 40% at 15% 20%, rgba(60, 50, 35, 0.12) 0%, transparent 60%);
+    }
+
+    .hero-vignette {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 80% at 50% 50%, transparent 20%, rgba(8,8,8,0.55) 65%, #080808 100%),
+        linear-gradient(to bottom, rgba(8,8,8,0.3) 0%, transparent 30%, transparent 60%, #080808 100%);
+      pointer-events: none;
+    }
+
+    .hero-scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .hero-stamp {
+      position: absolute;
+      top: calc(var(--header-h) + 36px);
+      left: 48px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      border: 1.5px solid var(--color-accent);
+      padding: 5px 12px;
+      transform: rotate(-3deg);
+      transform-origin: left center;
+      opacity: 0;
+      animation: stampIn 0.6s 0.4s forwards;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 0 32px;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    .classification-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--color-classified);
+      border: 1px solid rgba(255, 102, 0, 0.5);
+      padding: 5px 14px;
+      border-radius: var(--radius);
+      opacity: 0;
+      animation: badgeIn 0.5s 0.9s forwards;
+      background: rgba(255, 102, 0, 0.04);
+    }
+
+    .classification-badge::before,
+    .classification-badge::after {
+      content: '▌';
+      font-size: 7px;
+      opacity: 0.7;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(38px, 6vw, 84px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      line-height: 1.08;
+      text-shadow: 0 0 60px rgba(204, 0, 0, 0.12), 0 0 120px rgba(0, 0, 0, 0.8);
+      min-height: 1.5em;
+    }
+
+    /* Added by JS after fadeDecrypt completes */
+    .hero-title.flicker-anim {
+      animation: flicker 15s 2s infinite;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-quote);
+      font-size: clamp(16px, 2vw, 21px);
+      font-style: italic;
+      color: var(--color-muted);
+      max-width: 620px;
+      line-height: 1.6;
+      opacity: 0;
+      animation: slideUpFade 0.7s 2.2s forwards;
+    }
+
+    .hero-cta {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: none;
+      border: 1px solid var(--color-accent);
+      padding: 14px 36px;
+      border-radius: var(--radius);
+      transition: background 0.25s, box-shadow 0.25s;
+      opacity: 0;
+      animation: slideUpFade 0.7s 2.6s forwards;
+    }
+
+    .hero-cta:hover {
+      background: rgba(204, 0, 0, 0.1);
+      box-shadow: 0 0 24px rgba(204, 0, 0, 0.2), inset 0 0 24px rgba(204, 0, 0, 0.04);
+    }
+
+    .hero-case-id {
+      position: absolute;
+      bottom: 52px;
+      left: 48px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: slideUpFade 0.6s 1.6s forwards;
+    }
+
+    .hero-meta {
+      position: absolute;
+      bottom: 48px;
+      left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.15em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: slideUpFade 0.7s 2s forwards;
+    }
+
+    .hero-meta-item {
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-meta-sep {
+      width: 1px;
+      height: 14px;
+      background: var(--color-border);
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SECTION LABEL
+    ═══════════════════════════════════════════════ */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.22em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      padding-left: 14px;
+      border-left: 2px solid var(--color-accent);
+      margin-bottom: 32px;
+      user-select: none;
+    }
+
+    /* ═══════════════════════════════════════════════
+       MYSTERY CARD
+    ═══════════════════════════════════════════════ */
+    .mystery-card {
+      position: relative;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mystery-card:hover {
+      border-color: rgba(122, 0, 0, 0.6);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    .mystery-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--color-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+
+    .mystery-card:hover::after { transform: scaleX(1); }
+
+    .card-image {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .card-image-bg {
+      position: absolute;
+      inset: 0;
+      filter: grayscale(0.75) brightness(0.45) contrast(1.1);
+      transition: transform 0.45s ease, filter 0.3s;
+    }
+
+    .mystery-card:hover .card-image-bg {
+      transform: scale(1.04);
+      filter: grayscale(0.5) brightness(0.55) contrast(1.1);
+    }
+
+    .card-image-vignette {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 30%, rgba(15, 15, 15, 0.7) 70%, rgba(15, 15, 15, 0.95) 100%);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: var(--radius);
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .badge--abierto   { color: var(--color-open);       border: 1px solid rgba(34,153,77,0.55);   background: rgba(34,153,77,0.07); }
+    .badge--archivado { color: var(--color-muted);       border: 1px solid rgba(68,68,68,0.55);    background: rgba(68,68,68,0.07); }
+    .badge--clasificado { color: var(--color-classified); border: 1px solid rgba(255,102,0,0.5); background: rgba(255,102,0,0.06); }
+    .badge--sin-resolver { color: var(--color-accent);   border: 1px solid rgba(204,0,0,0.5);      background: rgba(204,0,0,0.06); }
+
+    .card-body {
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      flex: 1;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-meta-sep { color: var(--color-border); }
+
+    /* ═══════════════════════════════════════════════
+       FEATURED STRIP — § 03
+    ═══════════════════════════════════════════════ */
+    .featured-strip {
+      padding: 80px 48px 72px;
+      background: var(--color-bg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .featured-scroll {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border) transparent;
+    }
+
+    .featured-scroll::-webkit-scrollbar { height: 2px; }
+    .featured-scroll::-webkit-scrollbar-track { background: transparent; }
+    .featured-scroll::-webkit-scrollbar-thumb { background: var(--color-border); }
+
+    .featured-scroll .mystery-card { width: 300px; flex-shrink: 0; scroll-snap-align: start; }
+    .featured-scroll .card-image { height: 200px; }
+
+    /* ═══════════════════════════════════════════════
+       CATEGORIES GRID — § 04
+    ═══════════════════════════════════════════════ */
+    .categories-section {
+      padding: 0 48px 80px;
+      background: var(--color-bg);
+    }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cat-pill {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s;
+      text-align: left;
+    }
+
+    .cat-pill:hover {
+      border-color: var(--color-accent);
+      color: var(--color-text);
+      background: rgba(204, 0, 0, 0.03);
+      box-shadow: 0 0 0 1px rgba(204,0,0,0.12), 0 4px 20px rgba(204,0,0,0.08), inset 0 0 30px rgba(204,0,0,0.02);
+    }
+
+    .cat-icon { font-size: 11px; opacity: 0.35; flex-shrink: 0; transition: opacity 0.2s; }
+    .cat-pill:hover .cat-icon { opacity: 0.7; }
+    .cat-name { flex: 1; line-height: 1.3; }
+    .cat-count { font-size: 8.5px; color: var(--color-border); flex-shrink: 0; transition: color 0.2s; }
+    .cat-pill:hover .cat-count { color: var(--color-accent); }
+
+    /* ═══════════════════════════════════════════════
+       LATEST CASES — § 05
+    ═══════════════════════════════════════════════ */
+    .latest-cases {
+      padding: 80px 48px 72px;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .latest-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .latest-grid .mystery-card { background: var(--color-surface-2); }
+
+    .view-all-wrap { margin-top: 44px; text-align: center; }
+
+    .view-all-link {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 3px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .view-all-link:hover { color: var(--color-text); border-bottom-color: var(--color-muted); }
+    .view-all-link .arrow { transition: transform 0.2s; }
+    .view-all-link:hover .arrow { transform: translateX(4px); }
+
+    /* ═══════════════════════════════════════════════
+       APP FOOTER
+    ═══════════════════════════════════════════════ */
+    .app-footer {
+      background: var(--color-surface);
+      border-top: 1px dashed var(--color-accent);
+      padding: 40px 48px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .footer-brand { display: flex; flex-direction: column; gap: 8px; }
+
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      animation: flicker 14s 5s infinite;
+      user-select: none;
+    }
+
+    .footer-tagline {
+      font-family: var(--font-quote);
+      font-size: 13px;
+      font-style: italic;
+      color: var(--color-muted);
+    }
+
+    .footer-nav { display: flex; gap: 32px; justify-content: center; align-items: center; }
+
+    .footer-nav a {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      transition: color 0.2s;
+    }
+
+    .footer-nav a:hover { color: var(--color-text); }
+
+    .footer-stamp {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-classified);
+      border: 1px solid rgba(255, 102, 0, 0.3);
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      justify-self: end;
+      opacity: 0.5;
+      user-select: none;
+    }
+
+    .footer-bottom {
+      background: var(--color-surface);
+      padding: 16px 48px;
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-copy, .footer-version {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--color-border);
+      text-transform: uppercase;
+    }
+
+    /* ═══════════════════════════════════════════════
+       CARD ATMOSPHERIC BACKGROUNDS
+    ═══════════════════════════════════════════════ */
+    .card-bg--1 { background: radial-gradient(circle at 30% 40%, rgba(45,35,25,0.8) 0%, transparent 55%), radial-gradient(circle at 80% 70%, rgba(20,15,10,0.6) 0%, transparent 40%), linear-gradient(160deg, #1c1510 0%, #0f0c08 40%, #131008 70%, #0c0a06 100%); }
+    .card-bg--2 { background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(15,20,28,0.9) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 20% 80%, rgba(10,12,18,0.7) 0%, transparent 50%), linear-gradient(175deg, #0e1218 0%, #080c12 45%, #0a0e16 70%, #060810 100%); }
+    .card-bg--3 { background: radial-gradient(circle at 60% 30%, rgba(20,22,10,0.7) 0%, transparent 50%), radial-gradient(circle at 15% 70%, rgba(15,18,8,0.8) 0%, transparent 45%), linear-gradient(140deg, #111408 0%, #0c0f06 50%, #141808 75%, #0a0c06 100%); }
+    .card-bg--4 { background: radial-gradient(ellipse 70% 60% at 40% 50%, rgba(28,22,12,0.8) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(20,16,8,0.5) 0%, transparent 40%), linear-gradient(120deg, #181208 0%, #100e06 50%, #1c1610 75%, #0e0c06 100%); }
+    .card-bg--5 { background: radial-gradient(circle at 50% 50%, rgba(30,10,8,0.6) 0%, transparent 50%), radial-gradient(ellipse 80% 60% at 20% 40%, rgba(22,8,6,0.7) 0%, transparent 55%), linear-gradient(155deg, #160808 0%, #100606 50%, #1a0a08 75%, #0c0606 100%); }
+    .card-bg--6 { background: radial-gradient(ellipse 90% 50% at 50% 0%, rgba(12,14,22,0.9) 0%, transparent 55%), radial-gradient(circle at 75% 60%, rgba(8,10,18,0.6) 0%, transparent 45%), linear-gradient(165deg, #0c0e18 0%, #080a14 45%, #0e1018 70%, #060810 100%); }
+    .card-bg--7 { background: radial-gradient(ellipse 70% 60% at 30% 60%, rgba(28,24,14,0.8) 0%, transparent 55%), radial-gradient(circle at 80% 30%, rgba(22,18,10,0.5) 0%, transparent 40%), linear-gradient(150deg, #1a160c 0%, #120e08 50%, #1e1a0e 75%, #0e0c06 100%); }
+    .card-bg--8 { background: radial-gradient(circle at 50% 30%, rgba(12,8,16,0.85) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 10% 80%, rgba(8,6,12,0.8) 0%, transparent 50%), linear-gradient(135deg, #100a14 0%, #0a0810 50%, #140c18 75%, #080610 100%); }
+    .card-bg--9 { background: radial-gradient(ellipse 80% 60% at 50% 20%, rgba(10,14,20,0.9) 0%, transparent 55%), radial-gradient(circle at 80% 70%, rgba(8,10,16,0.6) 0%, transparent 45%), linear-gradient(160deg, #0c1018 0%, #08100e 45%, #0a1216 70%, #060c10 100%); }
+    .card-bg--10 { background: radial-gradient(circle at 40% 40%, rgba(20,18,28,0.7) 0%, transparent 50%), radial-gradient(ellipse 70% 80% at 80% 30%, rgba(14,12,22,0.6) 0%, transparent 45%), linear-gradient(145deg, #14121c 0%, #0e0c16 50%, #1a1622 75%, #0a0810 100%); }
+
+    /* ═══════════════════════════════════════════════
+       SCROLL-TRIGGERED REVEAL
+    ═══════════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .reveal-stagger:nth-child(2) { transition-delay: 0.08s; }
+    .reveal-stagger:nth-child(3) { transition-delay: 0.16s; }
+    .reveal-stagger:nth-child(4) { transition-delay: 0.24s; }
+    .reveal-stagger:nth-child(5) { transition-delay: 0.32s; }
+    .reveal-stagger:nth-child(6) { transition-delay: 0.40s; }
+
+    /* ═══════════════════════════════════════════════
+       MOBILE — 390px
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .app-header { padding: 0 20px; }
+      .header-nav { display: none; }
+      .search-btn .search-kbd { display: none; }
+      .hamburger { display: flex; }
+
+      .hero-stamp { top: calc(var(--header-h) + 20px); left: 20px; font-size: 9px; padding: 4px 10px; }
+      .hero-case-id { left: 20px; bottom: 96px; font-size: 9px; }
+      .hero-meta { flex-wrap: wrap; gap: 6px 0; bottom: 36px; padding: 0 20px; }
+      .hero-meta-item { padding: 0 12px; font-size: 9.5px; }
+      .hero-meta-sep { height: 10px; }
+      .classification-badge { font-size: 9px; padding: 4px 10px; }
+      .hero-title { font-size: clamp(30px, 8.5vw, 48px); letter-spacing: 0.06em; }
+      .hero-subtitle { font-size: 15px; }
+      .hero-cta { font-size: 10px; padding: 12px 24px; letter-spacing: 0.18em; }
+
+      .featured-strip, .latest-cases { padding: 52px 20px 48px; }
+      .categories-section { padding: 0 20px 52px; }
+      .section-label { font-size: 9.5px; margin-bottom: 24px; }
+
+      .categories-grid { grid-template-columns: repeat(2, 1fr); }
+      .latest-grid { grid-template-columns: 1fr; }
+      .latest-grid .mystery-card .card-image { height: 180px; }
+
+      .app-footer { grid-template-columns: 1fr; gap: 24px; padding: 32px 20px; text-align: center; }
+      .footer-nav { flex-direction: column; gap: 14px; }
+      .footer-stamp { justify-self: center; }
+      .footer-bottom { padding: 14px 20px; flex-direction: column; gap: 6px; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-meta-item:nth-child(n+6) { display: none; }
+      .hero-meta-sep:nth-child(n+5) { display: none; }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="film-grain" aria-hidden="true"></div>
+<div class="scanline" aria-hidden="true"></div>
+
+<!-- ═══ APP HEADER ═══ -->
+<header class="app-header" id="app-header" role="banner">
+  <a href="/" class="header-logo" aria-label="Obscura — inicio">
+    OBSC<span class="logo-u-wrap">U<span class="logo-red-dot" aria-hidden="true"></span></span>RA
+  </a>
+
+  <nav class="header-nav" aria-label="Navegación principal">
+    <a href="/explorar">EXPLORAR</a>
+    <a href="/mapa">MAPA</a>
+    <a href="/cronologia">CRONOLOGÍA</a>
+  </nav>
+
+  <div class="header-actions">
+    <button class="search-btn" id="search-btn" aria-label="Buscar (Cmd+K)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <circle cx="7" cy="7" r="4.5"/>
+        <path d="M10.5 10.5L14 14" stroke-linecap="round"/>
+      </svg>
+      BUSCAR
+      <span class="search-kbd">⌘K</span>
+    </button>
+    <button class="login-btn">LOGIN</button>
+    <button class="hamburger" id="hamburger-btn" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ HERO — CASO DEL DÍA ═══ -->
+<section class="hero" id="hero" aria-label="Caso del día">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="hero-env" aria-hidden="true"></div>
+  <div class="hero-scanlines" aria-hidden="true"></div>
+  <div class="hero-vignette" aria-hidden="true"></div>
+
+  <div class="hero-stamp" aria-label="Caso del día">CASO DEL DÍA</div>
+
+  <div class="hero-content">
+    <div class="classification-badge" role="status">CLASIFICADO</div>
+
+    <h1 class="hero-title" id="hero-title" aria-label="La Habitación Sin Retorno">
+      LA HABITACIÓN<br>SIN RETORNO
+    </h1>
+
+    <p class="hero-subtitle">
+      Testigos afirman haber escuchado susurros en lenguas extintas durante tres noches
+      consecutivas en el Hotel Excelsior, Turín, 1987.
+    </p>
+
+    <a href="/caso/obx-2024-0091" class="hero-cta">
+      ABRIR EXPEDIENTE <span aria-hidden="true">→</span>
+    </a>
+  </div>
+
+  <div class="hero-case-id">OBX-2024-0091</div>
+
+  <div class="hero-meta" role="list">
+    <div class="hero-meta-item" role="listitem">1987</div>
+    <div class="hero-meta-sep" aria-hidden="true"></div>
+    <div class="hero-meta-item" role="listitem"><span aria-hidden="true">🇮🇹</span> ITALIA</div>
+    <div class="hero-meta-sep" aria-hidden="true"></div>
+    <div class="hero-meta-item" role="listitem">FENÓMENOS PARANORMALES</div>
+    <div class="hero-meta-sep" aria-hidden="true"></div>
+    <div class="hero-meta-item" role="listitem">12.847 VISTAS</div>
+  </div>
+</section>
+
+<!-- ═══ § 03 — CASOS DESTACADOS ═══ -->
+<section class="featured-strip" aria-labelledby="sec-destacados">
+  <div class="section-label" id="sec-destacados">// 03 — CASOS DESTACADOS</div>
+  <div class="featured-scroll" role="list">
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--1"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--clasificado">CLASIFICADO</span>
+      </div>
+      <div class="card-body">
+        <h3 class="card-title">El Experimento Filadelfia</h3>
+        <div class="card-meta"><span>1943</span><span class="card-meta-sep">/</span><span>🇺🇸 EE.UU.</span></div>
+      </div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--2"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--sin-resolver">SIN RESOLVER</span>
+      </div>
+      <div class="card-body">
+        <h3 class="card-title">La Isla Poveglia</h3>
+        <div class="card-meta"><span>1922</span><span class="card-meta-sep">/</span><span>🇮🇹 ITALIA</span></div>
+      </div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--3"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--archivado">ARCHIVADO</span>
+      </div>
+      <div class="card-body">
+        <h3 class="card-title">La Masacre de Jonestown</h3>
+        <div class="card-meta"><span>1978</span><span class="card-meta-sep">/</span><span>🇬🇾 GUYANA</span></div>
+      </div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image">
+        <div class="card-image-bg card-bg--4"></div>
+        <div class="card-image-vignette"></div>
+        <span class="card-badge badge--sin-resolver">SIN RESOLVER</span>
+      </div>
+      <div class="card-body">
+        <h3 class="card-title">El Manuscrito Voynich</h3>
+        <div class="card-meta"><span>c.1404</span><span class="card-meta-sep">/</span><span>🌍 DESCONOCIDO</span></div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ═══ § 04 — CATEGORÍAS ═══ -->
+<section class="categories-section" aria-labelledby="sec-categorias">
+  <div class="section-label" id="sec-categorias">// 04 — CATEGORÍAS</div>
+  <div class="categories-grid" role="list">
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">OCULTISMO</span><span class="cat-count">247</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">CRÍMENES SIN RESOLVER</span><span class="cat-count">412</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">FENÓMENOS PARANORMALES</span><span class="cat-count">189</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">DESAPARICIONES</span><span class="cat-count">334</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">CULTOS Y SECTAS</span><span class="cat-count">98</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">ENTIDADES</span><span class="cat-count">156</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">ARCHIVOS CLASIFICADOS</span><span class="cat-count">61</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">LUGARES MALDITOS</span><span class="cat-count">203</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">RITUALES</span><span class="cat-count">77</span></button>
+    <button class="cat-pill reveal" role="listitem"><span class="cat-icon" aria-hidden="true">◈</span><span class="cat-name">AVISTAMIENTOS</span><span class="cat-count">291</span></button>
+  </div>
+</section>
+
+<!-- ═══ § 05 — ÚLTIMOS CASOS ═══ -->
+<section class="latest-cases" aria-labelledby="sec-ultimos">
+  <div class="section-label" id="sec-ultimos">// 05 — ÚLTIMOS CASOS</div>
+  <div class="latest-grid" role="list">
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image"><div class="card-image-bg card-bg--5"></div><div class="card-image-vignette"></div><span class="card-badge badge--archivado">ARCHIVADO</span></div>
+      <div class="card-body"><h3 class="card-title">La Posesión de Anneliese Michel</h3><div class="card-meta"><span>1976</span><span class="card-meta-sep">/</span><span>🇩🇪 ALEMANIA</span></div></div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image"><div class="card-image-bg card-bg--6"></div><div class="card-image-vignette"></div><span class="card-badge badge--sin-resolver">SIN RESOLVER</span></div>
+      <div class="card-body"><h3 class="card-title">La Desaparición del MH370</h3><div class="card-meta"><span>2014</span><span class="card-meta-sep">/</span><span>🇲🇾 MALASIA</span></div></div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image"><div class="card-image-bg card-bg--7"></div><div class="card-image-vignette"></div><span class="card-badge badge--abierto">CASO ABIERTO</span></div>
+      <div class="card-body"><h3 class="card-title">Los Círculos de Wiltshire</h3><div class="card-meta"><span>2022</span><span class="card-meta-sep">/</span><span>🇬🇧 REINO UNIDO</span></div></div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image"><div class="card-image-bg card-bg--8"></div><div class="card-image-vignette"></div><span class="card-badge badge--clasificado">CLASIFICADO</span></div>
+      <div class="card-body"><h3 class="card-title">La Orden del Temple Solar</h3><div class="card-meta"><span>1994</span><span class="card-meta-sep">/</span><span>🇨🇭 SUIZA</span></div></div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image"><div class="card-image-bg card-bg--9"></div><div class="card-image-vignette"></div><span class="card-badge badge--sin-resolver">SIN RESOLVER</span></div>
+      <div class="card-body"><h3 class="card-title">Los Sonidos de Taos</h3><div class="card-meta"><span>1991</span><span class="card-meta-sep">/</span><span>🇺🇸 EE.UU.</span></div></div>
+    </article>
+
+    <article class="mystery-card reveal reveal-stagger" role="listitem" tabindex="0">
+      <div class="card-image"><div class="card-image-bg card-bg--10"></div><div class="card-image-vignette"></div><span class="card-badge badge--abierto">CASO ABIERTO</span></div>
+      <div class="card-body"><h3 class="card-title">El Proyecto MK-Ultra</h3><div class="card-meta"><span>1953</span><span class="card-meta-sep">/</span><span>🇺🇸 EE.UU.</span></div></div>
+    </article>
+
+  </div>
+  <div class="view-all-wrap">
+    <a href="/casos" class="view-all-link">VER TODOS LOS CASOS <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+</section>
+
+<!-- ═══ APP FOOTER ═══ -->
+<footer class="app-footer" role="contentinfo">
+  <div class="footer-brand">
+    <div class="footer-logo">OBSCURA</div>
+    <p class="footer-tagline">Algunos archivos no deberían existir.</p>
+  </div>
+  <nav class="footer-nav" aria-label="Navegación del pie">
+    <a href="/explorar">EXPLORAR</a>
+    <a href="/mapa">MAPA</a>
+    <a href="/cronologia">CRONOLOGÍA</a>
+    <a href="/acerca">ACERCA</a>
+  </nav>
+  <div class="footer-stamp">CLASIFICADO — USO INTERNO</div>
+</footer>
+
+<div class="footer-bottom">
+  <span class="footer-copy">© 2024 OBSCURA ARCHIVE PROJECT</span>
+  <span class="footer-version">SISTEMA v2.4.1 — ACCESO RESTRINGIDO</span>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Header scroll ── */
+  var header = document.getElementById('app-header');
+  var ticking = false;
+  function updateHeader() { header.classList.toggle('scrolled', window.scrollY > 8); ticking = false; }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
+  }, { passive: true });
+
+  /* ── fadeDecrypt ── */
+  var GLYPHS = '█▓▒░╬╫╪╩╦╣╠═╚╔╝╗╔▀▄■□▪▫◆◇◈◉○●×+';
+
+  function fadeDecrypt(el, duration) {
+    var lines = [];
+    el.childNodes.forEach(function (node) {
+      if (node.nodeType === Node.TEXT_NODE) lines.push({ type: 'text', chars: node.textContent.split('') });
+      else if (node.nodeName === 'BR') lines.push({ type: 'br' });
+    });
+
+    var allChars = [];
+    lines.forEach(function (l) {
+      if (l.type === 'text') l.chars.forEach(function (c) { allChars.push(c); });
+      else allChars.push('\n');
+    });
+
+    var total = allChars.length;
+    var revealed = new Array(total).fill(false);
+    var start = null;
+
+    function tick(ts) {
+      if (!start) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var revealCount = Math.floor(progress * total * 1.3);
+
+      for (var i = 0; i < total; i++) {
+        if (!revealed[i] && i < revealCount) revealed[i] = true;
+      }
+
+      var html = '';
+      allChars.forEach(function (c, i) {
+        if (c === '\n') { html += '<br>'; return; }
+        if (c === ' ') { html += ' '; return; }
+        html += revealed[i] ? c : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      });
+      el.innerHTML = html;
+
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        el.innerHTML = allChars.map(function (c) { return c === '\n' ? '<br>' : c; }).join('');
+        el.classList.add('flicker-anim');
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  var heroTitle = document.getElementById('hero-title');
+  if (heroTitle) setTimeout(function () { fadeDecrypt(heroTitle, 2200); }, 1100);
+
+  /* ── IntersectionObserver — card + pill reveal ── */
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) { entry.target.classList.add('visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add('visible'); });
+  }
+
+  /* ── Cmd+K search shortcut ── */
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      document.getElementById('search-btn').focus();
+    }
+  });
+
+  /* ── Hamburger mobile nav ── */
+  var hamburger = document.getElementById('hamburger-btn');
+  var mobileOpen = false;
+  if (hamburger) {
+    hamburger.addEventListener('click', function () {
+      mobileOpen = !mobileOpen;
+      var existing = document.getElementById('mobile-nav');
+      if (mobileOpen) {
+        var nav = document.createElement('nav');
+        nav.id = 'mobile-nav';
+        nav.style.cssText = 'position:fixed;top:var(--header-h);left:0;right:0;background:rgba(15,15,15,0.98);border-bottom:1px solid #1f1f1f;padding:28px 20px;display:flex;flex-direction:column;gap:20px;z-index:199;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
+        ['EXPLORAR', 'MAPA', 'CRONOLOGÍA'].forEach(function (label) {
+          var a = document.createElement('a');
+          a.href = '/' + label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          a.textContent = label;
+          a.style.cssText = 'font-family:var(--font-mono);font-size:13px;letter-spacing:0.2em;color:#888;text-transform:uppercase;';
+          nav.appendChild(a);
+        });
+        document.body.appendChild(nav);
+      } else if (existing) {
+        existing.remove();
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

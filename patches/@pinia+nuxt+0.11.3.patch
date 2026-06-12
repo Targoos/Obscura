@@ -1,0 +1,25 @@
+diff --git a/node_modules/@pinia/nuxt/dist/runtime/plugin.vue3.js b/node_modules/@pinia/nuxt/dist/runtime/plugin.vue3.js
+index 39173c7..053de84 100644
+--- a/node_modules/@pinia/nuxt/dist/runtime/plugin.vue3.js
++++ b/node_modules/@pinia/nuxt/dist/runtime/plugin.vue3.js
+@@ -1,10 +1,10 @@
+-import { createPinia, setActivePinia } from "pinia";
++import { createPinia, getActivePinia, setActivePinia } from "pinia";
+ import { defineNuxtPlugin, useNuxtApp } from "#app";
+ import { toRaw } from "vue";
+ const plugin = defineNuxtPlugin({
+   name: "pinia",
+   setup(nuxtApp) {
+-    const pinia = createPinia();
++    const pinia = getActivePinia() ?? createPinia();
+     nuxtApp.vueApp.use(pinia);
+     setActivePinia(pinia);
+     if (nuxtApp.payload && nuxtApp.payload.pinia) {
+@@ -19,6 +19,7 @@ const plugin = defineNuxtPlugin({
+   hooks: {
+     "app:rendered"() {
+       const nuxtApp = useNuxtApp();
++      if (!nuxtApp.$pinia) return;
+       nuxtApp.payload.pinia = toRaw(nuxtApp.$pinia).state.value;
+       setActivePinia(void 0);
+     }

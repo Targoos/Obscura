@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBX-1959-0012 — La Masacre del Paso Dyatlov | OBSCURA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=Crimson+Text:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+
+    /* ══════════════════════════════════════════
+       DESIGN TOKENS — Obscura Design System
+    ══════════════════════════════════════════ */
+    :root {
+      --color-bg:           #080808;
+      --color-surface:      #0f0f0f;
+      --color-surface-2:    #161616;
+      --color-border:       #1f1f1f;
+      --color-muted:        #444444;
+      --color-text:         #d4d4d4;
+      --color-accent:       #cc0000;
+      --color-accent-dim:   #7a0000;
+      --color-classified:   #ff6600;
+      --color-unresolved:   #b8860b;
+      --color-open:         #22994d;
+
+      --font-display: 'Cinzel', 'Times New Roman', serif;
+      --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+      --font-mono:    'IBM Plex Mono', 'Menlo', monospace;
+      --font-quote:   'Crimson Text', Georgia, serif;
+
+      --radius:   4px;
+      --header-h: 64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    body { background: var(--color-bg); }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ══════════════════════════════════════════
+       KEYFRAMES
+    ══════════════════════════════════════════ */
+    @keyframes flicker {
+      0%, 89%, 91%, 93%, 95%, 97%, 100% { opacity: 1; }
+      90%  { opacity: 0.3; }
+      92%  { opacity: 0.85; }
+      94%  { opacity: 0.2; }
+      96%  { opacity: 0.9; }
+    }
+
+    @keyframes flickerFast {
+      0%, 94%, 96%, 100% { opacity: 1; }
+      95% { opacity: 0.1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes stampReveal {
+      from { opacity: 0; transform: rotate(-4deg) scale(0.8); }
+      to   { opacity: 1; transform: rotate(-4deg) scale(1); }
+    }
+
+    @keyframes badgeIn {
+      from { opacity: 0; transform: scale(0.88); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes scanline {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(200vh); }
+    }
+
+    /* ══════════════════════════════════════════
+       FILM GRAIN + SCANLINE
+    ══════════════════════════════════════════ */
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23g)'/%3E%3C/svg%3E");
+      background-size: 400px 400px;
+    }
+
+    .scanline-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      overflow: hidden;
+    }
+    .scanline-overlay::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 180px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.007) 50%, transparent 100%);
+      animation: scanline 18s linear infinite;
+    }
+
+    /* ══════════════════════════════════════════
+       APP HEADER
+    ══════════════════════════════════════════ */
+    .app-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 48px;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background 0.35s ease, border-color 0.35s ease;
+    }
+    .app-header.scrolled {
+      background: rgba(15, 15, 15, 0.94);
+      border-bottom-color: var(--color-border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .header-logo {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      animation: flicker 12s 2s infinite;
+      display: flex;
+      align-items: baseline;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .logo-u-wrap { position: relative; display: inline-block; }
+    .logo-red-dot {
+      position: absolute;
+      top: -5px; left: 50%;
+      transform: translateX(-50%);
+      width: 5px; height: 5px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      animation: flickerFast 6s 1.5s infinite;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin: 0 auto;
+    }
+    .header-nav a {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      transition: color 0.2s;
+      position: relative;
+    }
+    .header-nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0; right: 0;
+      height: 1px;
+      background: var(--color-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.25s ease;
+    }
+    .header-nav a:hover { color: var(--color-text); }
+    .header-nav a:hover::after { transform: scaleX(1); }
+
+    .header-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+    .search-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: none;
+      border: 1px solid var(--color-border);
+      color: var(--color-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .search-btn:hover { border-color: var(--color-muted); color: var(--color-text); }
+    .search-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .search-kbd {
+      border: 1px solid var(--color-border);
+      border-radius: 2px;
+      padding: 1px 4px;
+      font-size: 9px;
+      color: var(--color-border);
+    }
+
+    .login-btn {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: none;
+      border: 1px solid var(--color-accent);
+      padding: 8px 20px;
+      border-radius: var(--radius);
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .login-btn:hover {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 22px rgba(204,0,0,0.3);
+    }
+
+    /* ══════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      height: 100vh;
+      min-height: 600px;
+      overflow: hidden;
+    }
+
+    /* Dark atmospheric mountain background */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 100% 65% at 50% 0%, rgba(18, 13, 9, 0.96) 0%, transparent 62%),
+        radial-gradient(ellipse 50% 100% at 0% 50%, rgba(10, 7, 5, 0.9) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 100% at 100% 50%, rgba(10, 7, 5, 0.9) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 65% at 50% 100%, #080808 0%, #080808 55%, transparent 100%);
+    }
+
+    /* Forest/mountain topographic texture */
+    .hero-topo {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(155deg, rgba(28,20,12,0.18) 0%, transparent 45%),
+        radial-gradient(ellipse 55% 38% at 22% 35%, rgba(35, 25, 14, 0.22) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 42% at 78% 42%, rgba(24, 17, 10, 0.18) 0%, transparent 55%),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255,255,255,0.003) 79px, rgba(255,255,255,0.003) 80px),
+        repeating-linear-gradient(0deg, transparent 0px, transparent 79px, rgba(255,255,255,0.003) 79px, rgba(255,255,255,0.003) 80px);
+    }
+
+    /* Atmospheric scanlines on hero */
+    .hero-scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+      pointer-events: none;
+    }
+
+    .hero-vignette {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 80% at 50% 50%, transparent 20%, rgba(8,8,8,0.55) 65%, #080808 100%),
+        linear-gradient(to bottom, rgba(8,8,8,0.4) 0%, transparent 25%, transparent 55%, rgba(8,8,8,0.7) 82%, #080808 100%);
+      pointer-events: none;
+    }
+
+    /* Case ID — top left */
+    .hero-case-id {
+      position: absolute;
+      top: calc(var(--header-h) + 30px);
+      left: 48px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.24em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: slideUp 0.5s 0.3s forwards;
+    }
+
+    /* Status badge — top right */
+    .hero-status-badge {
+      position: absolute;
+      top: calc(var(--header-h) + 26px);
+      right: 48px;
+      opacity: 0;
+      animation: badgeIn 0.5s 0.5s forwards;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: var(--radius);
+      border: 1px solid;
+    }
+    .status-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .badge-sin-resolver {
+      color: var(--color-unresolved);
+      border-color: rgba(184, 134, 11, 0.4);
+      background: rgba(184, 134, 11, 0.06);
+    }
+    .badge-clasificado {
+      color: var(--color-classified);
+      border-color: rgba(255, 102, 0, 0.45);
+      background: rgba(255, 102, 0, 0.05);
+    }
+    .badge-abierto {
+      color: var(--color-open);
+      border-color: rgba(34, 153, 77, 0.4);
+      background: rgba(34, 153, 77, 0.06);
+    }
+    .badge-archivado {
+      color: var(--color-muted);
+      border-color: rgba(68,68,68,0.5);
+      background: rgba(68,68,68,0.08);
+    }
+
+    /* EXTREMO classification stamp — bottom left */
+    .hero-extremo {
+      position: absolute;
+      bottom: 120px;
+      left: 48px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      border: 2px solid var(--color-accent);
+      padding: 6px 14px;
+      border-radius: var(--radius);
+      transform: rotate(-4deg);
+      transform-origin: left center;
+      opacity: 0;
+      animation: stampReveal 0.6s 1.7s forwards;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    /* Main title area — center bottom */
+    .hero-content {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 128px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      padding: 0 80px;
+      text-align: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero-classification-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: 0.36em;
+      text-transform: uppercase;
+      color: var(--color-classified);
+      border: 1px solid rgba(255, 102, 0, 0.45);
+      padding: 5px 16px;
+      border-radius: var(--radius);
+      background: rgba(255, 102, 0, 0.04);
+      opacity: 0;
+      animation: badgeIn 0.5s 0.9s forwards;
+    }
+    .hero-classification-label::before,
+    .hero-classification-label::after {
+      content: '█';
+      font-size: 6px;
+      opacity: 0.55;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(38px, 5.5vw, 82px);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #fff;
+      line-height: 1.1;
+      max-width: 860px;
+      opacity: 0;
+    }
+
+    /* Added by JS after decryptTitle completes */
+    .hero-title.flicker-anim {
+      animation: flicker 8s 1s infinite;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-quote);
+      font-style: italic;
+      font-size: 18px;
+      color: rgba(150, 140, 130, 0.9);
+      max-width: 580px;
+      line-height: 1.6;
+      opacity: 0;
+      animation: slideUp 0.7s 3s forwards;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      border: 1px solid var(--color-accent);
+      padding: 11px 28px;
+      border-radius: var(--radius);
+      background: transparent;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      opacity: 0;
+      animation: slideUp 0.6s 3.4s forwards;
+      margin-top: 4px;
+    }
+    .hero-cta:hover {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 32px rgba(204, 0, 0, 0.35);
+    }
+
+    /* Metadata bar — pinned to bottom */
+    .hero-meta-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 48px;
+      background: rgba(8, 8, 8, 0.88);
+      border-top: 1px solid var(--color-border);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      opacity: 0;
+      animation: slideUp 0.6s 3.8s forwards;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 24px;
+      border-right: 1px solid var(--color-border);
+      height: 100%;
+    }
+    .meta-item:first-child { padding-left: 0; }
+    .meta-item:last-child  { border-right: none; }
+
+    .meta-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      color: rgba(68, 68, 68, 0.9);
+      text-transform: uppercase;
+    }
+    .meta-value {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--color-text);
+      letter-spacing: 0.06em;
+    }
+    .meta-value-accent { color: var(--color-accent); }
+
+    .meta-stars {
+      display: flex;
+      gap: 3px;
+      color: var(--color-unresolved);
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    .meta-spacer { flex: 1; }
+
+    /* ══════════════════════════════════════════
+       PAGE LAYOUT
+    ══════════════════════════════════════════ */
+    .page-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+
+    /* ══════════════════════════════════════════
+       TWO-COLUMN LAYOUT
+    ══════════════════════════════════════════ */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 368px;
+      gap: 52px;
+      padding-top: 64px;
+      padding-bottom: 80px;
+      align-items: start;
+    }
+
+    .col-main { min-width: 0; }
+
+    .col-sidebar {
+      position: sticky;
+      top: calc(var(--header-h) + 20px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ══════════════════════════════════════════
+       SECTION LABELS
+    ══════════════════════════════════════════ */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      padding-left: 14px;
+      border-left: 2px solid var(--color-accent);
+      margin-bottom: 30px;
+    }
+
+    /* ══════════════════════════════════════════
+       EDITORIAL SUMMARY
+    ══════════════════════════════════════════ */
+    .editorial-summary {
+      margin-bottom: 56px;
+    }
+
+    .editorial-summary p {
+      font-family: var(--font-quote);
+      font-style: italic;
+      font-size: 19.5px;
+      line-height: 1.78;
+      color: rgba(212, 212, 212, 0.88);
+      margin-bottom: 22px;
+      letter-spacing: 0.01em;
+    }
+    .editorial-summary p:last-child { margin-bottom: 0; }
+
+    .editorial-summary p:first-child::first-letter {
+      font-family: var(--font-display);
+      font-size: 58px;
+      font-weight: 700;
+      float: left;
+      line-height: 0.82;
+      margin-right: 8px;
+      margin-top: 5px;
+      color: var(--color-accent);
+    }
+
+    /* ══════════════════════════════════════════
+       HECHOS CONOCIDOS
+    ══════════════════════════════════════════ */
+    .hechos { margin-bottom: 60px; }
+
+    .hecho-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.2s;
+    }
+    .hecho-item:first-of-type { border-top: 1px solid var(--color-border); }
+    .hecho-item:hover { background: rgba(255,255,255,0.01); }
+
+    .hecho-num {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-accent);
+      letter-spacing: 0.18em;
+      padding-top: 3px;
+      flex-shrink: 0;
+      width: 20px;
+    }
+
+    .hecho-chevron {
+      color: var(--color-accent);
+      flex-shrink: 0;
+      padding-top: 2px;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.4;
+    }
+
+    .hecho-text {
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════
+       CRONOLOGÍA
+    ══════════════════════════════════════════ */
+    .cronologia { margin-bottom: 60px; }
+
+    .timeline {
+      position: relative;
+      padding-left: 44px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 8px;
+      bottom: 8px;
+      width: 0;
+      border-left: 1px dashed var(--color-accent-dim);
+    }
+
+    .timeline-event {
+      position: relative;
+      margin-bottom: 34px;
+      opacity: 0;
+      transform: translateX(-12px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .timeline-event:last-child { margin-bottom: 0; }
+    .timeline-event.visible { opacity: 1; transform: translateX(0); }
+
+    .timeline-dot {
+      position: absolute;
+      left: -38px;
+      top: 6px;
+      width: 9px; height: 9px;
+      border: 1.5px solid var(--color-accent);
+      border-radius: 50%;
+      background: var(--color-bg);
+    }
+    .timeline-dot::after {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border-radius: 50%;
+      background: var(--color-accent-dim);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .timeline-event.visible .timeline-dot::after { opacity: 1; }
+
+    .timeline-year {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      color: var(--color-accent);
+      margin-bottom: 5px;
+    }
+
+    .timeline-title {
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+
+    .timeline-desc {
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      color: var(--color-muted);
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════
+       TEORÍAS
+    ══════════════════════════════════════════ */
+    .teorias { margin-bottom: 48px; }
+
+    .teoria-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.22s;
+    }
+    .teoria-card:last-child { margin-bottom: 0; }
+    .teoria-card:hover {
+      border-color: rgba(204, 0, 0, 0.35);
+      transform: translateX(5px);
+    }
+
+    .teoria-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .teoria-title {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: 0.02em;
+    }
+
+    .teoria-pct {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-muted);
+      flex-shrink: 0;
+    }
+
+    .credibility-bar {
+      width: 100%;
+      height: 2px;
+      background: var(--color-border);
+      border-radius: 1px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .credibility-fill {
+      height: 100%;
+      background: var(--color-accent);
+      width: 0;
+      transition: width 1.4s ease;
+    }
+
+    .teoria-desc {
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      color: var(--color-muted);
+      line-height: 1.62;
+      margin-bottom: 12px;
+    }
+
+    .teoria-source {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(204, 0, 0, 0.8);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .teoria-source:hover { color: var(--color-text); }
+    .teoria-source::before { content: '↗'; }
+
+    /* ══════════════════════════════════════════
+       SIDEBAR — DOSSIER METADATA CARD
+    ══════════════════════════════════════════ */
+    .dossier-card {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .dossier-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .dossier-head-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+    }
+    .dossier-head-class {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--color-classified);
+      text-transform: uppercase;
+    }
+
+    .dossier-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 9px 16px;
+      border-bottom: 1px solid rgba(31,31,31,0.8);
+      gap: 10px;
+    }
+    .dossier-row:last-child { border-bottom: none; }
+
+    .dossier-key {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .dossier-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-text);
+      text-align: right;
+      word-break: break-word;
+      letter-spacing: 0.04em;
+    }
+
+    /* ══════════════════════════════════════════
+       SIDEBAR — MAP
+    ══════════════════════════════════════════ */
+    .map-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .map-body {
+      width: 100%;
+      height: 190px;
+      position: relative;
+      overflow: hidden;
+      background: #080a0c;
+    }
+    .map-body svg { width: 100%; height: 100%; }
+
+    .map-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+    }
+    .map-coords {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-muted);
+      letter-spacing: 0.1em;
+    }
+    .map-link {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--color-accent);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .map-link:hover { color: var(--color-text); }
+
+    /* ══════════════════════════════════════════
+       SIDEBAR — FUENTES
+    ══════════════════════════════════════════ */
+    .fuentes-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+
+    .sidebar-section-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .fuente-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(31,31,31,0.7);
+    }
+    .fuente-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .fuente-num {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--color-accent);
+      flex-shrink: 0;
+      padding-top: 1px;
+      width: 16px;
+    }
+    .fuente-text {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--color-muted);
+      line-height: 1.5;
+      letter-spacing: 0.02em;
+    }
+    .fuente-ref {
+      color: var(--color-text);
+      font-size: 10.5px;
+    }
+
+    /* ══════════════════════════════════════════
+       SIDEBAR — ACTIONS (GUARDAR / VALORAR)
+    ══════════════════════════════════════════ */
+    .actions-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .save-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      color: var(--color-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 9px 14px;
+      border-radius: var(--radius);
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .save-btn:hover { border-color: var(--color-accent); color: var(--color-text); }
+    .save-btn.saved {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+      background: rgba(204, 0, 0, 0.06);
+    }
+    .save-btn svg { width: 13px; height: 13px; flex-shrink: 0; transition: fill 0.2s, stroke 0.2s; }
+
+    .star-rating {
+      display: flex;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+    .star-rating .star {
+      font-size: 17px;
+      color: var(--color-border);
+      cursor: pointer;
+      transition: color 0.15s, transform 0.15s;
+      user-select: none;
+      line-height: 1;
+    }
+    .star-rating .star:hover { transform: scale(1.3); }
+    .star-rating .star.active { color: var(--color-unresolved); }
+
+    /* ══════════════════════════════════════════
+       SIDEBAR — CASOS RELACIONADOS
+    ══════════════════════════════════════════ */
+    .related-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .related-header {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .related-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(31,31,31,0.7);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .related-item:last-child { border-bottom: none; }
+    .related-item:hover { background: rgba(255,255,255,0.02); }
+
+    .related-thumb {
+      width: 50px; height: 50px;
+      border-radius: var(--radius);
+      flex-shrink: 0;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--color-border);
+      letter-spacing: 0.08em;
+      overflow: hidden;
+    }
+
+    .related-info { min-width: 0; flex: 1; }
+
+    .related-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+
+    .related-status-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .related-name {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .related-meta-row {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--color-muted);
+      letter-spacing: 0.1em;
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ══════════════════════════════════════════
+       COMENTARIOS
+    ══════════════════════════════════════════ */
+    .comentarios-section {
+      border-top: 1px solid var(--color-border);
+      padding: 60px 0 80px;
+    }
+
+    .auth-notice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin-bottom: 40px;
+    }
+
+    .auth-notice-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-muted);
+      letter-spacing: 0.1em;
+    }
+    .auth-notice-text strong { color: var(--color-text); font-weight: 500; }
+
+    .auth-btn {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: transparent;
+      border: 1px solid var(--color-accent);
+      padding: 9px 20px;
+      border-radius: var(--radius);
+      white-space: nowrap;
+      transition: background 0.2s, color 0.2s;
+    }
+    .auth-btn:hover { background: var(--color-accent); color: #fff; }
+
+    .comments-list { display: flex; flex-direction: column; }
+
+    .comment-item {
+      display: flex;
+      gap: 16px;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .comment-item:first-child { border-top: 1px solid var(--color-border); }
+
+    .comment-avatar {
+      width: 36px; height: 36px;
+      border-radius: var(--radius);
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-muted);
+    }
+
+    .comment-body { flex: 1; min-width: 0; }
+
+    .comment-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .comment-user {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text);
+      letter-spacing: 0.1em;
+    }
+    .comment-date {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-muted);
+      letter-spacing: 0.08em;
+    }
+    .comment-verified {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--color-open);
+      text-transform: uppercase;
+    }
+
+    .comment-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: rgba(212, 212, 212, 0.85);
+      line-height: 1.68;
+    }
+
+    /* ══════════════════════════════════════════
+       SCROLL REVEAL
+    ══════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ══════════════════════════════════════════
+       APP FOOTER
+    ══════════════════════════════════════════ */
+    .app-footer {
+      border-top: 1px dashed var(--color-accent);
+      padding: 36px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+    }
+    .footer-tagline {
+      font-family: var(--font-quote);
+      font-style: italic;
+      font-size: 13px;
+      color: var(--color-muted);
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 28px;
+    }
+    .footer-nav a {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      transition: color 0.2s;
+    }
+    .footer-nav a:hover { color: var(--color-text); }
+
+    .footer-stamp {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      border: 1px solid var(--color-accent-dim);
+      padding: 5px 10px;
+      border-radius: var(--radius);
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE — MOBILE 390px
+    ══════════════════════════════════════════ */
+    @media (max-width: 820px) {
+      .app-header { padding: 0 20px; }
+      .header-nav { display: none; }
+      .search-btn span:not(svg) { display: none; }
+      .search-kbd { display: none; }
+
+      .hero-case-id { left: 20px; }
+      .hero-status-badge { right: 20px; }
+      .hero-content { padding: 0 20px; bottom: 140px; }
+      .hero-title { font-size: clamp(30px, 8.5vw, 52px); }
+      .hero-subtitle { font-size: 16px; }
+      .hero-extremo { left: 20px; bottom: 100px; font-size: 9.5px; }
+
+      .hero-meta-bar {
+        padding: 8px 20px;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 0;
+      }
+      .meta-item {
+        padding: 5px 12px;
+        border-right: none;
+        border-bottom: 1px solid rgba(31,31,31,0.6);
+        height: auto;
+        width: 50%;
+      }
+      .meta-item:last-child,
+      .meta-item:nth-last-child(2) { border-bottom: none; }
+      .meta-spacer { display: none; }
+
+      .page-content { padding: 0 20px; }
+
+      .two-col {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding-top: 40px;
+      }
+      .col-sidebar {
+        position: static;
+        order: -1;
+      }
+
+      .app-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 28px 20px;
+        gap: 20px;
+      }
+      .footer-nav { flex-wrap: wrap; gap: 14px; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title { font-size: clamp(26px, 9vw, 42px); }
+      .hero-cta { font-size: 10px; padding: 10px 20px; }
+      .meta-item { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Atmosphere overlays -->
+  <div class="film-grain" aria-hidden="true"></div>
+  <div class="scanline-overlay" aria-hidden="true"></div>
+
+  <!-- ══════════════════════════════
+       APP HEADER
+  ══════════════════════════════ -->
+  <header class="app-header" id="appHeader">
+    <a href="index.html" class="header-logo" aria-label="OBSCURA — Inicio">
+      OBSC<span class="logo-u-wrap">U<span class="logo-red-dot" aria-hidden="true"></span></span>RA
+    </a>
+
+    <nav class="header-nav" aria-label="Navegación principal">
+      <a href="#">EXPLORAR</a>
+      <a href="#">MAPA</a>
+      <a href="#">CRONOLOGÍA</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="search-btn" aria-label="Abrir búsqueda">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <circle cx="6.5" cy="6.5" r="4.5"/>
+          <line x1="10" y1="10" x2="14" y2="14"/>
+        </svg>
+        <span>Buscar</span>
+        <kbd class="search-kbd">⌘K</kbd>
+      </button>
+      <button class="login-btn">LOGIN</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════
+       HERO
+  ══════════════════════════════ -->
+  <section class="hero" aria-labelledby="hero-case-title">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-topo" aria-hidden="true"></div>
+    <div class="hero-scanlines" aria-hidden="true"></div>
+    <div class="hero-vignette" aria-hidden="true"></div>
+
+    <!-- Case ID — top left -->
+    <div class="hero-case-id" aria-label="Identificador de caso">OBX-1959-0012</div>
+
+    <!-- Status badge — top right -->
+    <div class="hero-status-badge">
+      <span class="status-badge badge-sin-resolver">SIN RESOLVER</span>
+    </div>
+
+    <!-- Center bottom — classification + title + CTA -->
+    <div class="hero-content">
+      <span class="hero-classification-label" aria-label="Nivel de clasificación: Extremo">NIVEL DE CLASIFICACIÓN: EXTREMO</span>
+      <h1 class="hero-title" id="hero-case-title">La Masacre del Paso Dyatlov</h1>
+      <p class="hero-subtitle">Nueve excursionistas expertos mueren en circunstancias inexplicables en las montañas Urales. La investigación fue archivada. Los archivos, clasificados durante treinta años.</p>
+      <a href="#expediente" class="hero-cta">ABRIR EXPEDIENTE →</a>
+    </div>
+
+    <!-- EXTREMO stamp — bottom left -->
+    <div class="hero-extremo" aria-hidden="true">EXTREMO</div>
+
+    <!-- Metadata bar — pinned bottom -->
+    <div class="hero-meta-bar" aria-label="Metadatos del caso">
+      <div class="meta-item">
+        <span class="meta-label">AÑO</span>
+        <span class="meta-value">1959</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">PAÍS</span>
+        <span class="meta-value">🇷🇺 Rusia</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">CATEGORÍA</span>
+        <span class="meta-value">SUCESO INEXPLICABLE</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">VISTAS</span>
+        <span class="meta-value meta-value-accent">847,293</span>
+      </div>
+      <div class="meta-spacer"></div>
+      <div class="meta-item">
+        <span class="meta-label">VALORACIÓN</span>
+        <div class="meta-stars" aria-label="Valoración: 4.7 de 5">★★★★★</div>
+        <span class="meta-value">4.7</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       TWO-COLUMN CONTENT
+  ══════════════════════════════ -->
+  <main id="expediente" class="page-content">
+    <div class="two-col">
+
+      <!-- LEFT COLUMN — main content -->
+      <div class="col-main">
+
+        <!-- Editorial summary -->
+        <section class="editorial-summary reveal" aria-label="Resumen editorial">
+          <p>En la noche del 1 de febrero de 1959, nueve experimentados excursionistas soviéticos ascendían el monte Kholat Syakhl en los Urales del Norte. A una temperatura de cuarenta grados bajo cero, algo les obligó a rasgar su tienda desde el interior y huir descalzos hacia la oscuridad. Ninguno sobrevivió.</p>
+          <p>Los cuerpos fueron hallados en posiciones que desafían toda explicación racional. Algunos presentaban fracturas óseas de una violencia equivalente a un accidente de tráfico a alta velocidad, pero sin marcas externas en la piel. La lengua, los ojos y parte del tejido facial de una de las víctimas habían desaparecido. Sus ropas registraron niveles de radiación anómalos.</p>
+          <p>El fiscal de Sverdlovsk archivó el caso bajo la designación oficial de «fuerza natural desconocida». Los documentos permanecieron clasificados hasta 1990. Hoy, sesenta y cinco años después, no existe una explicación consensuada. El expediente sigue abierto.</p>
+        </section>
+
+        <!-- Hechos conocidos -->
+        <section class="hechos reveal" id="hechos" aria-labelledby="hechos-label">
+          <div class="section-label" id="hechos-label">// 02 — HECHOS CONOCIDOS</div>
+
+          <div class="hecho-item">
+            <span class="hecho-num" aria-hidden="true">01</span>
+            <span class="hecho-chevron" aria-hidden="true">›</span>
+            <span class="hecho-text">La tienda fue rasgada desde el interior por los propios excursionistas, lo que indica una huida en pánico ante una amenaza inmediata e identificada.</span>
+          </div>
+          <div class="hecho-item">
+            <span class="hecho-num" aria-hidden="true">02</span>
+            <span class="hecho-chevron" aria-hidden="true">›</span>
+            <span class="hecho-text">Las víctimas abandonaron el campamento descalzas a una temperatura estimada de –30°C, excluyendo cualquier decisión racional o planificada.</span>
+          </div>
+          <div class="hecho-item">
+            <span class="hecho-num" aria-hidden="true">03</span>
+            <span class="hecho-chevron" aria-hidden="true">›</span>
+            <span class="hecho-text">Tres cuerpos presentaban fracturas óseas en costillas y cráneo compatibles con impacto de alta energía; la piel, sin embargo, permanecía intacta en todos los casos.</span>
+          </div>
+          <div class="hecho-item">
+            <span class="hecho-num" aria-hidden="true">04</span>
+            <span class="hecho-chevron" aria-hidden="true">›</span>
+            <span class="hecho-text">El cadáver de Lyudmila Dubinina carecía de lengua, ojos y parte del labio superior. El forense no pudo determinar el mecanismo ni la causa de esta mutilación.</span>
+          </div>
+          <div class="hecho-item">
+            <span class="hecho-num" aria-hidden="true">05</span>
+            <span class="hecho-chevron" aria-hidden="true">›</span>
+            <span class="hecho-text">Varias prendas de los excursionistas registraron niveles de radiación beta y gamma significativamente elevados según el análisis forense de mayo de 1959.</span>
+          </div>
+          <div class="hecho-item">
+            <span class="hecho-num" aria-hidden="true">06</span>
+            <span class="hecho-chevron" aria-hidden="true">›</span>
+            <span class="hecho-text">La investigación fue archivada en mayo de 1959 bajo la causa oficial de «fuerza natural desconocida». No se realizaron cargos ni abrió ningún procedimiento paralelo.</span>
+          </div>
+          <div class="hecho-item">
+            <span class="hecho-num" aria-hidden="true">07</span>
+            <span class="hecho-chevron" aria-hidden="true">›</span>
+            <span class="hecho-text">Los archivos completos del KGB sobre el incidente permanecieron clasificados hasta 1990 — treinta y un años después de los hechos.</span>
+          </div>
+        </section>
+
+        <!-- Cronología -->
+        <section class="cronologia reveal" id="cronologia" aria-labelledby="cronologia-label">
+          <div class="section-label" id="cronologia-label">// 03 — CRONOLOGÍA</div>
+
+          <div class="timeline">
+            <div class="timeline-event">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-year">23 ENE 1959</div>
+              <div class="timeline-title">El grupo parte de Sverdlovsk</div>
+              <div class="timeline-desc">Nueve excursionistas del Instituto Politécnico de los Urales, liderados por Igor Dyatlov, inician su expedición invernal de categoría III hacia la montaña Kholat Syakhl. El grupo tiene experiencia acreditada en condiciones extremas.</div>
+            </div>
+            <div class="timeline-event">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-year">27 ENE 1959</div>
+              <div class="timeline-title">Última entrada registrada en los diarios</div>
+              <div class="timeline-desc">Zinaida Kolmogorova escribe la última entrada conocida. El grupo reporta condiciones favorables y buen estado de ánimo. Es la última comunicación verificada con el exterior.</div>
+            </div>
+            <div class="timeline-event">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-year">01 FEB 1959 — APROX. 23:30H</div>
+              <div class="timeline-title">Noche del incidente</div>
+              <div class="timeline-desc">Algo obliga al grupo a rasgar la tienda desde el interior y huir hacia el bosque en estado de pánico. La temperatura exterior ronda los –30°C. Ninguno lleva calzado. Ninguno regresa.</div>
+            </div>
+            <div class="timeline-event">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-year">26 FEB 1959</div>
+              <div class="timeline-title">Los rescatistas hallan el campamento vacío</div>
+              <div class="timeline-desc">Una patrulla de búsqueda localiza la tienda rasgada desde adentro. Los primeros cinco cuerpos son encontrados a cientos de metros del campamento en dirección al bosque, en diferentes estados.</div>
+            </div>
+            <div class="timeline-event">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-year">06 MAY 1959</div>
+              <div class="timeline-title">Cuatro cuerpos recuperados bajo la nieve</div>
+              <div class="timeline-desc">Con el deshielo, se localizan los cuatro cuerpos restantes en un barranco. Las heridas forenses resultan inexplicables. Las prendas presentan radiación. El cuerpo de Dubinina carece de partes blandas del rostro.</div>
+            </div>
+            <div class="timeline-event">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-year">28 MAY 1959</div>
+              <div class="timeline-title">Investigación archivada oficialmente</div>
+              <div class="timeline-desc">La Fiscalía de Sverdlovsk cierra el caso. Causa oficial: «fuerza natural irresistible». Los expedientes son clasificados y entregados al KGB. El acceso al Paso Dyatlov queda prohibido durante tres años.</div>
+            </div>
+            <div class="timeline-event">
+              <div class="timeline-dot" aria-hidden="true"></div>
+              <div class="timeline-year">1990 — DESCLASIFICACIÓN PARCIAL</div>
+              <div class="timeline-title">Los archivos se abren al público</div>
+              <div class="timeline-desc">El gobierno ruso desclasifica parte de los documentos. Los investigadores descubren que páginas completas de los expedientes forenses han desaparecido. El caso es reabierto informalmente por el Fondo Dyatlov. Permanece sin resolver.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Teorías -->
+        <section class="teorias reveal" id="teorias" aria-labelledby="teorias-label">
+          <div class="section-label" id="teorias-label">// 04 — TEORÍAS</div>
+
+          <div class="teoria-card">
+            <div class="teoria-header">
+              <div class="teoria-title">Prueba militar — Arma de onda de presión</div>
+              <div class="teoria-pct">78%</div>
+            </div>
+            <div class="credibility-bar"><div class="credibility-fill" data-width="78"></div></div>
+            <div class="teoria-desc">La región era zona de pruebas militares soviéticas activas. Las fracturas óseas sin traumatismo externo son consistentes con una onda de presión de alto impacto. La radiación en las prendas y la prohibición posterior de acceso al área refuerzan esta hipótesis. Testimonios de habitantes locales describen «esferas luminosas naranjas» sobre el cielo la noche del incidente.</div>
+            <a href="#" class="teoria-source">Ref. KGB-1959-04-073</a>
+          </div>
+
+          <div class="teoria-card">
+            <div class="teoria-header">
+              <div class="teoria-title">Avalancha de placa de nieve</div>
+              <div class="teoria-pct">45%</div>
+            </div>
+            <div class="credibility-bar"><div class="credibility-fill" data-width="45"></div></div>
+            <div class="teoria-desc">La teoría oficial revisada en 2019 sugiere una avalancha de placa en la ladera. Sin embargo, la pendiente del terreno es insuficiente para generar el impacto observado. La ausencia de nieve sobre los cuerpos más cercanos al campamento la contradice directamente. Los propios investigadores estatales admiten inconsistencias en su informe.</div>
+            <a href="#" class="teoria-source">Fiscalía Sverdlovsk — Revisión 2019</a>
+          </div>
+
+          <div class="teoria-card">
+            <div class="teoria-header">
+              <div class="teoria-title">Infrasound — Resonancia de viento montañoso</div>
+              <div class="teoria-pct">35%</div>
+            </div>
+            <div class="credibility-bar"><div class="credibility-fill" data-width="35"></div></div>
+            <div class="teoria-desc">Frecuencias de infrasound generadas por el viento al superar el relieve montañoso pueden inducir pánico extremo, desorientación severa y alucinaciones. Explicaría la huida irracional, pero no las mutilaciones ni los niveles de radiación en las prendas.</div>
+            <a href="#" class="teoria-source">Journal of Acoustic Science, 2013</a>
+          </div>
+
+          <div class="teoria-card">
+            <div class="teoria-header">
+              <div class="teoria-title">Intervención de origen desconocido</div>
+              <div class="teoria-pct">12%</div>
+            </div>
+            <div class="credibility-bar"><div class="credibility-fill" data-width="12"></div></div>
+            <div class="teoria-desc">Múltiples testigos en pueblos cercanos reportaron luces anaranjadas en el cielo durante las fechas del incidente. Los Mansi, pueblo indígena de la región, denominan al Kholat Syakhl «la montaña de los nueve muertos» — topónimo que precede al incidente de 1959 por décadas. Su origen permanece sin explicación.</div>
+            <a href="#" class="teoria-source">Testimonio Mansi — Archivo Sverdlovsk 1959</a>
+          </div>
+        </section>
+
+      </div>
+      <!-- end col-main -->
+
+      <!-- RIGHT COLUMN — sidebar -->
+      <aside class="col-sidebar" aria-label="Datos del expediente">
+
+        <!-- Dossier metadata -->
+        <div class="dossier-card">
+          <div class="dossier-head">
+            <span class="dossier-head-label">// EXPEDIENTE</span>
+            <span class="dossier-head-class">EXTREMO</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">ID</span>
+            <span class="dossier-val">OBX-1959-0012</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">ESTADO</span>
+            <span class="dossier-val" style="color:var(--color-unresolved)">SIN RESOLVER</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">FECHA</span>
+            <span class="dossier-val">01/02/1959</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">UBICACIÓN</span>
+            <span class="dossier-val">Paso Dyatlov, Urales del Norte</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">PAÍS</span>
+            <span class="dossier-val">🇷🇺 URSS / Rusia</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">CATEGORÍA</span>
+            <span class="dossier-val">SUCESO INEXPLICABLE</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">VÍCTIMAS</span>
+            <span class="dossier-val" style="color:var(--color-accent)">9 CONFIRMADAS</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">COORDS</span>
+            <span class="dossier-val">61°45'N · 59°27'E</span>
+          </div>
+          <div class="dossier-row">
+            <span class="dossier-key">CLASIFICACIÓN</span>
+            <span class="dossier-val">KGB 1959 – 1990</span>
+          </div>
+        </div>
+
+        <!-- Map placeholder -->
+        <div class="map-card" aria-label="Ubicación del caso en el mapa">
+          <div class="map-body">
+            <svg viewBox="0 0 368 190" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="ping" cx="55%" cy="48%" r="18%">
+                  <stop offset="0%" stop-color="#cc0000" stop-opacity="0.4"/>
+                  <stop offset="100%" stop-color="#cc0000" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <rect width="368" height="190" fill="#090b0e"/>
+              <!-- Grid -->
+              <line x1="0" y1="38" x2="368" y2="38" stroke="#151a1e" stroke-width="0.7"/>
+              <line x1="0" y1="76" x2="368" y2="76" stroke="#151a1e" stroke-width="0.7"/>
+              <line x1="0" y1="114" x2="368" y2="114" stroke="#151a1e" stroke-width="0.7"/>
+              <line x1="0" y1="152" x2="368" y2="152" stroke="#151a1e" stroke-width="0.7"/>
+              <line x1="73.6" y1="0" x2="73.6" y2="190" stroke="#151a1e" stroke-width="0.7"/>
+              <line x1="147.2" y1="0" x2="147.2" y2="190" stroke="#151a1e" stroke-width="0.7"/>
+              <line x1="220.8" y1="0" x2="220.8" y2="190" stroke="#151a1e" stroke-width="0.7"/>
+              <line x1="294.4" y1="0" x2="294.4" y2="190" stroke="#151a1e" stroke-width="0.7"/>
+              <!-- Mountain contours -->
+              <path d="M40,130 Q68,75 100,88 Q132,100 155,52 Q175,22 200,46 Q224,68 255,60 Q282,54 310,72 Q338,88 365,78" stroke="#1e2328" stroke-width="2" fill="none"/>
+              <path d="M20,150 Q62,105 105,116 Q140,125 162,82 Q183,55 207,72 Q234,90 266,84 Q295,80 325,96 Q348,108 368,100" stroke="#1a1e22" stroke-width="1.3" fill="none"/>
+              <path d="M0,168 Q55,138 108,146 Q148,152 170,110 Q192,78 215,97 Q242,116 272,108 Q308,100 340,118 Q355,126 368,122" stroke="#161a1e" stroke-width="1" fill="none"/>
+              <!-- Mountain peaks fills -->
+              <path d="M155,52 L138,88 L172,88 Z" fill="#18191c" stroke="#212428" stroke-width="0.5"/>
+              <path d="M200,46 L185,78 L215,78 Z" fill="#161819" stroke="#1e2024" stroke-width="0.5"/>
+              <path d="M255,60 L242,90 L268,90 Z" fill="#141618" stroke="#1c1e22" stroke-width="0.5"/>
+              <!-- Glow around pin -->
+              <circle cx="202" cy="82" r="32" fill="url(#ping)"/>
+              <!-- Crosshairs -->
+              <line x1="184" y1="82" x2="220" y2="82" stroke="#cc0000" stroke-width="0.6" stroke-dasharray="3,4" opacity="0.55"/>
+              <line x1="202" y1="64" x2="202" y2="100" stroke="#cc0000" stroke-width="0.6" stroke-dasharray="3,4" opacity="0.55"/>
+              <!-- Pin -->
+              <circle cx="202" cy="82" r="6" fill="#cc0000" opacity="0.9"/>
+              <circle cx="202" cy="82" r="10" fill="none" stroke="#cc0000" stroke-width="1.2" opacity="0.45"/>
+              <circle cx="202" cy="82" r="16" fill="none" stroke="#cc0000" stroke-width="0.5" opacity="0.25"/>
+              <!-- Location label -->
+              <rect x="214" y="70" width="94" height="15" fill="#0d0f12" rx="2" opacity="0.9"/>
+              <text x="261" y="81" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#555" text-anchor="middle" letter-spacing="0.1em">PASO DYATLOV</text>
+              <!-- Coord labels -->
+              <text x="5" y="187" font-family="IBM Plex Mono, monospace" font-size="7" fill="#2a2e32" letter-spacing="0.08em">59°E</text>
+              <text x="5" y="12" font-family="IBM Plex Mono, monospace" font-size="7" fill="#2a2e32" letter-spacing="0.08em">62°N</text>
+              <text x="330" y="187" font-family="IBM Plex Mono, monospace" font-size="7" fill="#2a2e32" letter-spacing="0.08em">60°E</text>
+            </svg>
+          </div>
+          <div class="map-footer">
+            <span class="map-coords">61°45'N · 59°27'E</span>
+            <a href="#" class="map-link">ABRIR MAPA ↗</a>
+          </div>
+        </div>
+
+        <!-- Fuentes -->
+        <div class="fuentes-card">
+          <div class="sidebar-section-label">// FUENTES DOCUMENTALES</div>
+          <div class="fuente-item">
+            <span class="fuente-num">01</span>
+            <span class="fuente-text">Archivo Nacional URSS — <span class="fuente-ref">Ref. KGB-1959-04-073</span></span>
+          </div>
+          <div class="fuente-item">
+            <span class="fuente-num">02</span>
+            <span class="fuente-text">Informe forense — Dr. Boris Vozrozhdenny, Sverdlovsk, 1959</span>
+          </div>
+          <div class="fuente-item">
+            <span class="fuente-num">03</span>
+            <span class="fuente-text">Diarios personales de los excursionistas — Digitalización 2013, Fondo Dyatlov</span>
+          </div>
+          <div class="fuente-item">
+            <span class="fuente-num">04</span>
+            <span class="fuente-text">Informe final Fiscalía Sverdlovsk — <span class="fuente-ref">Ref. 171959</span></span>
+          </div>
+          <div class="fuente-item">
+            <span class="fuente-num">05</span>
+            <span class="fuente-text">Testimonio rescatistas — Coronel Ortiyukow, Febrero 1959</span>
+          </div>
+        </div>
+
+        <!-- Guardar / Valorar -->
+        <div class="actions-card">
+          <button class="save-btn" id="saveBtn" aria-label="Guardar en favoritos" aria-pressed="false">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M3 2h10a1 1 0 0 1 1 1v10l-6-3-6 3V3a1 1 0 0 1 1-1z"/>
+            </svg>
+            GUARDAR
+          </button>
+          <div class="star-rating" id="starRating" role="group" aria-label="Valorar este caso (1 a 5 estrellas)">
+            <span class="star active" data-val="1" title="1 estrella" tabindex="0" role="radio" aria-checked="true">★</span>
+            <span class="star active" data-val="2" title="2 estrellas" tabindex="0" role="radio" aria-checked="true">★</span>
+            <span class="star active" data-val="3" title="3 estrellas" tabindex="0" role="radio" aria-checked="true">★</span>
+            <span class="star active" data-val="4" title="4 estrellas" tabindex="0" role="radio" aria-checked="true">★</span>
+            <span class="star active" data-val="5" title="5 estrellas" tabindex="0" role="radio" aria-checked="true">★</span>
+          </div>
+        </div>
+
+        <!-- Casos relacionados -->
+        <div class="related-card" aria-label="Casos relacionados">
+          <div class="related-header">// CASOS RELACIONADOS</div>
+
+          <div class="related-item" tabindex="0" role="link" aria-label="Caso: Vuelo MH370">
+            <div class="related-thumb" aria-hidden="true">IMG</div>
+            <div class="related-info">
+              <div class="related-title-row">
+                <span class="related-status-dot" style="background:var(--color-unresolved)" aria-label="Sin resolver"></span>
+                <span class="related-name">Vuelo MH370</span>
+              </div>
+              <div class="related-meta-row">
+                <span>2014</span>
+                <span>·</span>
+                <span>🇲🇾 Malasia</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="related-item" tabindex="0" role="link" aria-label="Caso: Proyecto MK-Ultra">
+            <div class="related-thumb" aria-hidden="true">IMG</div>
+            <div class="related-info">
+              <div class="related-title-row">
+                <span class="related-status-dot" style="background:var(--color-classified)" aria-label="Clasificado"></span>
+                <span class="related-name">Proyecto MK-Ultra</span>
+              </div>
+              <div class="related-meta-row">
+                <span>1953</span>
+                <span>·</span>
+                <span>🇺🇸 EEUU</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="related-item" tabindex="0" role="link" aria-label="Caso: El Manuscrito Voynich">
+            <div class="related-thumb" aria-hidden="true">IMG</div>
+            <div class="related-info">
+              <div class="related-title-row">
+                <span class="related-status-dot" style="background:var(--color-muted)" aria-label="Archivado"></span>
+                <span class="related-name">El Manuscrito Voynich</span>
+              </div>
+              <div class="related-meta-row">
+                <span>c.1400</span>
+                <span>·</span>
+                <span>🇮🇹 Italia</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+      <!-- end col-sidebar -->
+
+    </div>
+    <!-- end two-col -->
+
+    <!-- ══════════════════════════════
+         COMENTARIOS
+    ══════════════════════════════ -->
+    <section class="comentarios-section" aria-labelledby="comments-label">
+      <div class="section-label" id="comments-label">// 06 — COMENTARIOS DEL ARCHIVO</div>
+
+      <!-- Not-logged-in state -->
+      <div class="auth-notice" id="authNotice">
+        <span class="auth-notice-text">Debes <strong>iniciar sesión</strong> para añadir un análisis al expediente.</span>
+        <button class="auth-btn" id="authBtn">ACCEDER AL ARCHIVO</button>
+      </div>
+
+      <!-- Approved comments -->
+      <div class="comments-list" aria-label="Comentarios del expediente">
+
+        <div class="comment-item">
+          <div class="comment-avatar" aria-hidden="true">AK</div>
+          <div class="comment-body">
+            <div class="comment-meta">
+              <span class="comment-user">anatoliy_k</span>
+              <span class="comment-date">12 MAR 2024 — 02:17H</span>
+              <span class="comment-verified">✓ VERIFICADO</span>
+            </div>
+            <p class="comment-text">El detalle de las fracturas óseas sin traumatismo externo es lo que siempre me ha resultado más perturbador. Un médico forense con treinta años de experiencia declaró nunca haber visto nada semejante en toda su carrera. La teoría de la avalancha no explica esto. Nunca lo ha explicado.</p>
+          </div>
+        </div>
+
+        <div class="comment-item">
+          <div class="comment-avatar" aria-hidden="true">RV</div>
+          <div class="comment-body">
+            <div class="comment-meta">
+              <span class="comment-user">researcher_v</span>
+              <span class="comment-date">08 MAR 2024 — 19:54H</span>
+            </div>
+            <p class="comment-text">Lo de los archivos desaparecidos del expediente forense es crucial y no se menciona suficiente. No es que los archivos no existan — es que existen pero tienen páginas arrancadas. Alguien tomó esa decisión conscientemente.</p>
+          </div>
+        </div>
+
+        <div class="comment-item">
+          <div class="comment-avatar" aria-hidden="true">MF</div>
+          <div class="comment-body">
+            <div class="comment-meta">
+              <span class="comment-user">mari_f</span>
+              <span class="comment-date">02 MAR 2024 — 11:33H</span>
+            </div>
+            <p class="comment-text">Trabajé tres años en el Instituto Politécnico de los Urales. Lo que nadie menciona es que los familiares de las víctimas nunca recibieron una explicación coherente. Fueron silenciados activamente durante décadas. El edificio principal aún tiene una placa. Nadie habla de ella.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ══════════════════════════════
+       APP FOOTER
+  ══════════════════════════════ -->
+  <footer class="app-footer" aria-label="Pie de página OBSCURA">
+    <div class="footer-brand">
+      <div class="footer-logo">OBSCURA</div>
+      <div class="footer-tagline">Algunos archivos no deberían existir.</div>
+    </div>
+    <nav class="footer-nav" aria-label="Navegación del pie de página">
+      <a href="#">EXPLORAR</a>
+      <a href="#">MAPA</a>
+      <a href="#">CRONOLOGÍA</a>
+      <a href="#">SOBRE NOSOTROS</a>
+      <a href="#">CONTACTO</a>
+    </nav>
+    <div class="footer-stamp" aria-label="Clasificación interna">CLASIFICADO — USO INTERNO</div>
+  </footer>
+
+  <script>
+    /* ─── Header scroll ─── */
+    const header = document.getElementById('appHeader');
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          header.classList.toggle('scrolled', window.scrollY > 30);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    /* ─── Save button ─── */
+    const saveBtn = document.getElementById('saveBtn');
+    let saved = false;
+    saveBtn.addEventListener('click', () => {
+      saved = !saved;
+      saveBtn.classList.toggle('saved', saved);
+      saveBtn.setAttribute('aria-pressed', saved);
+      saveBtn.innerHTML = saved
+        ? `<svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13" aria-hidden="true"><path d="M3 2h10a1 1 0 0 1 1 1v10l-6-3-6 3V3a1 1 0 0 1 1-1z"/></svg> GUARDADO`
+        : `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13" aria-hidden="true"><path d="M3 2h10a1 1 0 0 1 1 1v10l-6-3-6 3V3a1 1 0 0 1 1-1z"/></svg> GUARDAR`;
+    });
+
+    /* ─── Star rating ─── */
+    const stars = document.querySelectorAll('#starRating .star');
+    let currentRating = 5;
+
+    stars.forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        const v = parseInt(star.dataset.val);
+        stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= v));
+      });
+      star.addEventListener('mouseleave', () => {
+        stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= currentRating));
+      });
+      star.addEventListener('click', () => {
+        currentRating = parseInt(star.dataset.val);
+        stars.forEach(s => {
+          const active = parseInt(s.dataset.val) <= currentRating;
+          s.classList.toggle('active', active);
+          s.setAttribute('aria-checked', active);
+        });
+      });
+    });
+
+    /* ─── Auth state toggle (demo) ─── */
+    const authBtn = document.getElementById('authBtn');
+    authBtn.addEventListener('click', () => {
+      const notice = document.getElementById('authNotice');
+      notice.innerHTML = `
+        <div style="width:100%">
+          <div style="font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.24em;color:var(--color-muted);margin-bottom:12px;text-transform:uppercase;">// AÑADIR ANÁLISIS AL EXPEDIENTE</div>
+          <textarea id="commentTA" placeholder="Tu análisis, hipótesis o evidencia adicional..."
+            style="width:100%;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius);color:var(--color-text);font-family:var(--font-body);font-size:14px;line-height:1.6;padding:14px 16px;resize:vertical;min-height:96px;outline:none;transition:border-color 0.2s;"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <button id="submitComment"
+              style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--color-text);background:transparent;border:1px solid var(--color-accent);padding:9px 22px;border-radius:var(--radius);cursor:pointer;transition:background 0.2s,color 0.2s;">
+              ENVIAR ANÁLISIS →
+            </button>
+          </div>
+        </div>`;
+
+      const ta = document.getElementById('commentTA');
+      ta.addEventListener('focus', () => ta.style.borderColor = 'var(--color-accent)');
+      ta.addEventListener('blur',  () => ta.style.borderColor = 'var(--color-border)');
+
+      const submitBtn = document.getElementById('submitComment');
+      submitBtn.addEventListener('mouseenter', () => { submitBtn.style.background = 'var(--color-accent)'; submitBtn.style.color = '#fff'; });
+      submitBtn.addEventListener('mouseleave', () => { submitBtn.style.background = 'transparent'; submitBtn.style.color = 'var(--color-text)'; });
+    });
+
+    /* ─── Credibility bars — animate on scroll ─── */
+    const credFills = document.querySelectorAll('.credibility-fill');
+    const credObs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const w = el.getAttribute('data-width');
+          requestAnimationFrame(() => { el.style.width = w + '%'; });
+          credObs.unobserve(el);
+        }
+      });
+    }, { threshold: 0.4 });
+    credFills.forEach(el => credObs.observe(el));
+
+    /* ─── Timeline events — staggered slide in ─── */
+    const tlEvents = document.querySelectorAll('.timeline-event');
+    const tlObs = new IntersectionObserver(entries => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 90);
+          tlObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    tlEvents.forEach(el => tlObs.observe(el));
+
+    /* ─── General scroll reveals ─── */
+    const revEls = document.querySelectorAll('.reveal');
+    const revObs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    revEls.forEach(el => revObs.observe(el));
+
+    /* ─── Related items keyboard nav ─── */
+    document.querySelectorAll('.related-item[role="link"]').forEach(item => {
+      item.addEventListener('keypress', e => { if (e.key === 'Enter') item.click(); });
+    });
+
+    /* ─── decryptTitle — character-by-character decrypt effect ─── */
+    const DECRYPT_GLYPHS = '█▓▒░╬╫╩╦╣╠═╚╗▀▄■□×+@#$%!?~^';
+
+    function decryptTitle(el, totalMs = 1200) {
+      const segments = [];
+      el.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          node.textContent.split('').forEach(c => {
+            segments.push(c === ' ' ? { type: 'space' } : { type: 'char', real: c });
+          });
+        } else if (node.nodeName === 'BR') {
+          segments.push({ type: 'br' });
+        }
+      });
+
+      const charSegs = segments.filter(s => s.type === 'char');
+      const N = charSegs.length;
+      if (N === 0) { el.style.opacity = '1'; el.classList.add('flicker-anim'); return; }
+
+      let ci = 0;
+      el.innerHTML = segments.map(s => {
+        if (s.type === 'br') return '<br>';
+        if (s.type === 'space') return ' ';
+        const escaped = s.real.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        return `<span class="dc-c" data-r="${escaped}" data-ci="${ci++}"></span>`;
+      }).join('');
+      el.style.opacity = '1';
+      el.style.filter = 'none';
+
+      const spans = Array.from(el.querySelectorAll('.dc-c'));
+
+      const intervals = spans.map(span => {
+        span.textContent = DECRYPT_GLYPHS[Math.floor(Math.random() * DECRYPT_GLYPHS.length)];
+        return setInterval(() => {
+          span.textContent = DECRYPT_GLYPHS[Math.floor(Math.random() * DECRYPT_GLYPHS.length)];
+        }, 45);
+      });
+
+      spans.forEach((span, i) => {
+        const lockAt = N === 1 ? totalMs * 0.6 : (i / (N - 1)) * (totalMs - 80) + 80;
+        setTimeout(() => {
+          clearInterval(intervals[i]);
+          span.textContent = span.dataset.r;
+        }, lockAt);
+      });
+
+      setTimeout(() => el.classList.add('flicker-anim'), totalMs + 120);
+    }
+
+    const caseTitle = document.getElementById('hero-case-title');
+    if (caseTitle) setTimeout(() => decryptTitle(caseTitle, 1200), 900);
+  </script>
+</body>
+</html>

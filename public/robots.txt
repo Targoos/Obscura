@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /perfil
+Disallow: /favoritos
+Disallow: /historial
+Disallow: /configuracion
+Sitemap: https://obscura.vercel.app/sitemap.xml
