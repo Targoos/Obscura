@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OBSCURA — Acceso al Archivo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;1,300&family=Crimson+Text:ital,wght@1,400;1,600&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── CSS CUSTOM PROPERTIES ─────────────────────────── */
+    :root {
+      --color-bg: #080808;
+      --color-surface: #0f0f0f;
+      --color-surface-2: #161616;
+      --color-border: #1f1f1f;
+      --color-muted: #444444;
+      --color-text: #d4d4d4;
+      --color-accent: #cc0000;
+      --color-accent-dim: #7a0000;
+      --color-classified: #ff6600;
+    }
+
+    /* ─── RESET ──────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── FILM GRAIN OVERLAY ─────────────────────────────── */
+    #film-grain {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.03;
+    }
+
+    /* ─── SCANLINE OVERLAY ───────────────────────────────── */
+    #scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.04) 2px,
+        rgba(0, 0, 0, 0.04) 4px
+      );
+    }
+
+    /* ─── KEYFRAMES ──────────────────────────────────────── */
+    @keyframes flicker {
+      0%, 89%, 91%, 93%, 95%, 97%, 100% { opacity: 1; }
+      90%  { opacity: 0.35; }
+      92%  { opacity: 0.8;  }
+      94%  { opacity: 0.3;  }
+      96%  { opacity: 0.9;  }
+    }
+    @keyframes flickerFast {
+      0%, 94%, 96%, 100% { opacity: 1; }
+      95%                { opacity: 0.1; }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    /* ─── AUTH VIEW WRAPPER ──────────────────────────────── */
+    .auth-view {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% 0%,   rgba(20, 14, 8, 0.97)  0%, transparent 60%),
+        radial-gradient(ellipse 40% 70% at 0%   50%,  rgba(12, 8,  5, 0.8)   0%, transparent 55%),
+        radial-gradient(ellipse 40% 70% at 100% 50%,  rgba(12, 8,  5, 0.8)   0%, transparent 55%),
+        radial-gradient(ellipse 90% 50% at 50% 100%,  #080808                0%, #080808 70%,  transparent 100%);
+    }
+
+    /* ─── AUTH CARD ──────────────────────────────────────── */
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      animation: slideUpFade 0.5s ease forwards;
+    }
+
+    /* ─── BRANDING AREA ──────────────────────────────────── */
+    .brand-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      display: flex;
+      align-items: baseline;
+      user-select: none;
+    }
+
+    .flicker-anim {
+      animation: flicker 8s 1s infinite;
+    }
+
+    .logo-u-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .logo-red-dot {
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      animation: flickerFast 6s 1.5s infinite;
+    }
+
+    .logo-sub {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+    }
+
+    .stamp {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      border: 1.5px solid var(--color-accent);
+      padding: 5px 14px;
+      display: inline-block;
+      transform: rotate(-2deg);
+      background: rgba(204, 0, 0, 0.04);
+    }
+
+    /* ─── FORM CONTAINER ─────────────────────────────────── */
+    .form-container {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ─── ERROR BANNER ───────────────────────────────────── */
+    .error-banner {
+      display: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      border: 1px solid var(--color-accent);
+      padding: 10px 14px;
+      background: rgba(204, 0, 0, 0.05);
+    }
+
+    .error-banner.visible {
+      display: block;
+    }
+
+    /* ─── FIELD GROUP ────────────────────────────────────── */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+    }
+
+    .field-link {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .field-link:hover {
+      color: var(--color-text);
+    }
+
+    .field-input {
+      width: 100%;
+      height: 44px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      padding: 0 14px;
+      border-radius: 4px;
+      caret-color: var(--color-accent);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-input::placeholder {
+      color: var(--color-muted);
+      opacity: 0.55;
+    }
+
+    .field-input:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 1px rgba(204, 0, 0, 0.2);
+    }
+
+    .field-input.has-error {
+      border-color: var(--color-accent);
+    }
+
+    .field-error {
+      display: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--color-accent);
+    }
+
+    .field-error.visible {
+      display: block;
+    }
+
+    /* ─── SUBMIT BUTTON ──────────────────────────────────── */
+    .submit-btn {
+      width: 100%;
+      height: 48px;
+      background: transparent;
+      border: 1px solid var(--color-accent);
+      color: var(--color-text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(204, 0, 0, 0.35);
+    }
+
+    .submit-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .submit-btn.loading {
+      border-color: var(--color-muted);
+      color: var(--color-muted);
+    }
+
+    .submit-btn.success {
+      border-color: #22994d;
+      color: #22994d;
+      background: rgba(34, 153, 77, 0.06);
+    }
+
+    .spinner {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(204, 0, 0, 0.3);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .submit-btn.loading .spinner {
+      display: block;
+    }
+
+    /* ─── DIVIDER ────────────────────────────────────────── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    .divider-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      white-space: nowrap;
+    }
+
+    /* ─── OAUTH BUTTONS ──────────────────────────────────── */
+    .oauth-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .oauth-btn {
+      height: 40px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .oauth-btn:hover {
+      border-color: var(--color-muted);
+      color: #fff;
+    }
+
+    .oauth-btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    /* ─── SWITCH LINE ────────────────────────────────────── */
+    .switch-line {
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--color-muted);
+    }
+
+    .switch-link {
+      color: var(--color-accent);
+      text-decoration: none;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .switch-link:hover {
+      color: #ff3333;
+    }
+
+    /* ─── BOTTOM STAMP ───────────────────────────────────── */
+    .bottom-stamp {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--color-border);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .form-container {
+        padding: 24px;
+      }
+
+      .oauth-row {
+        grid-template-columns: 1fr;
+      }
+
+      .logo {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Film grain -->
+  <svg id="film-grain" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <filter id="grain-filter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain-filter)"/>
+  </svg>
+
+  <!-- Scanlines -->
+  <div id="scanlines"></div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW: LOGIN
+  ═══════════════════════════════════════ -->
+  <div id="view-login" class="auth-view">
+    <div class="auth-card">
+
+      <!-- Branding -->
+      <div class="brand-area">
+        <div class="logo" id="logo-login">
+          OBS<span class="logo-u-wrap"><span class="logo-red-dot"></span>U</span>RA
+        </div>
+        <div class="logo-sub">// ACCESO AL ARCHIVO</div>
+        <div class="stamp">AUTORIZACIÓN REQUERIDA</div>
+      </div>
+
+      <!-- Form -->
+      <div class="form-container">
+        <!-- Error banner -->
+        <div class="error-banner" id="login-error-banner">
+          ACCESO DENEGADO — CREDENCIALES INVÁLIDAS
+        </div>
+
+        <!-- IDENTIFICADOR -->
+        <div class="field-group">
+          <div class="field-header">
+            <label class="field-label" for="login-email">IDENTIFICADOR</label>
+          </div>
+          <input
+            class="field-input"
+            id="login-email"
+            type="email"
+            placeholder="agente@obscura.es"
+            autocomplete="email"
+          />
+          <span class="field-error" id="login-email-error"></span>
+        </div>
+
+        <!-- CÓDIGO DE ACCESO -->
+        <div class="field-group">
+          <div class="field-header">
+            <label class="field-label" for="login-password">CÓDIGO DE ACCESO</label>
+            <a href="#" class="field-link">OLVIDÉ MI CÓDIGO →</a>
+          </div>
+          <input
+            class="field-input"
+            id="login-password"
+            type="password"
+            placeholder="••••••••••••"
+            autocomplete="current-password"
+          />
+          <span class="field-error" id="login-password-error"></span>
+        </div>
+
+        <!-- Submit -->
+        <button class="submit-btn" id="login-submit" type="button" onclick="handleLogin()">
+          <span class="spinner"></span>
+          <span id="login-btn-label">SOLICITAR ACCESO →</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">— O ACCEDER CON —</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <!-- OAuth -->
+        <div class="oauth-row">
+          <button class="oauth-btn" type="button">
+            <!-- Google G -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            GOOGLE
+          </button>
+          <button class="oauth-btn" type="button">
+            <!-- GitHub mark -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+            </svg>
+            GITHUB
+          </button>
+        </div>
+      </div>
+
+      <!-- Switch -->
+      <div class="switch-line">
+        ¿Aún no tienes acceso?&nbsp;
+        <a href="#" class="switch-link" onclick="showRegistro(); return false;">REGISTRARSE →</a>
+      </div>
+
+      <div class="bottom-stamp">CLASIFICADO — ACCESO RESTRINGIDO — USO INTERNO</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW: REGISTRO
+  ═══════════════════════════════════════ -->
+  <div id="view-registro" class="auth-view" style="display:none">
+    <div class="auth-card">
+
+      <!-- Branding -->
+      <div class="brand-area">
+        <div class="logo" id="logo-registro">
+          OBS<span class="logo-u-wrap"><span class="logo-red-dot"></span>U</span>RA
+        </div>
+        <div class="logo-sub">// REGISTRO DE AGENTE</div>
+        <div class="stamp">ACCESO CLASIFICADO</div>
+      </div>
+
+      <!-- Form -->
+      <div class="form-container">
+
+        <!-- NOMBRE DE AGENTE -->
+        <div class="field-group">
+          <label class="field-label" for="reg-username">NOMBRE DE AGENTE</label>
+          <input
+            class="field-input"
+            id="reg-username"
+            type="text"
+            placeholder="nombre_agente"
+            autocomplete="username"
+          />
+          <span class="field-error" id="reg-username-error"></span>
+        </div>
+
+        <!-- IDENTIFICADOR -->
+        <div class="field-group">
+          <label class="field-label" for="reg-email">IDENTIFICADOR</label>
+          <input
+            class="field-input"
+            id="reg-email"
+            type="email"
+            placeholder="agente@obscura.es"
+            autocomplete="email"
+          />
+          <span class="field-error" id="reg-email-error"></span>
+        </div>
+
+        <!-- CÓDIGO DE ACCESO -->
+        <div class="field-group">
+          <label class="field-label" for="reg-password">CÓDIGO DE ACCESO</label>
+          <input
+            class="field-input"
+            id="reg-password"
+            type="password"
+            placeholder="mín. 8 caracteres"
+            autocomplete="new-password"
+          />
+          <span class="field-error" id="reg-password-error"></span>
+        </div>
+
+        <!-- CONFIRMAR CÓDIGO -->
+        <div class="field-group">
+          <label class="field-label" for="reg-confirm">CONFIRMAR CÓDIGO</label>
+          <input
+            class="field-input"
+            id="reg-confirm"
+            type="password"
+            placeholder="repetir código"
+            autocomplete="new-password"
+          />
+          <span class="field-error" id="reg-confirm-error"></span>
+        </div>
+
+        <!-- Submit -->
+        <button class="submit-btn" id="reg-submit" type="button" onclick="handleRegistro()">
+          <span class="spinner"></span>
+          <span id="reg-btn-label">CREAR CREDENCIALES →</span>
+        </button>
+
+      </div>
+
+      <!-- Switch -->
+      <div class="switch-line">
+        ¿Ya tienes acceso?&nbsp;
+        <a href="#" class="switch-link" onclick="showLogin(); return false;">INICIAR SESIÓN →</a>
+      </div>
+
+      <div class="bottom-stamp">CLASIFICADO — ACCESO RESTRINGIDO — USO INTERNO</div>
+    </div>
+  </div>
+
+  <script>
+    /* ─── VIEW SWITCHER ─────────────────────────────────── */
+    function showLogin() {
+      document.getElementById('view-login').style.display = 'flex';
+      document.getElementById('view-registro').style.display = 'none';
+      // Re-trigger decrypt on logo
+      decryptTitle(document.getElementById('logo-login'), 300);
+    }
+
+    function showRegistro() {
+      document.getElementById('view-login').style.display = 'none';
+      document.getElementById('view-registro').style.display = 'flex';
+      decryptTitle(document.getElementById('logo-registro'), 300);
+    }
+
+    /* ─── decryptTitle (Obscura platform standard) ──────── */
+    function decryptTitle(el, delay) {
+      const GLYPHS = '█▓▒░╬╫╩╦╣╠═╚╗▀▄■□×+@#$%!?~^';
+
+      // Preserve inner structure — only decrypt text nodes
+      // For the logo we operate directly on textContent-style chars
+      // Since the logo has inner spans (logo-u-wrap), we work on textContent chars
+      // but reconstruct the HTML safely.
+      // Simplified: operate on the full textContent string, remap to spans,
+      // then re-inject, preserving the red dot span inline.
+
+      const originalHTML = el.innerHTML;
+      const text = el.textContent; // e.g. "OBSCURA"
+      const N = text.length;
+      const TOTAL = 1200;
+
+      el.classList.remove('flicker-anim');
+
+      // Build char spans while preserving the U-dot structure
+      // We'll replace the logo inner HTML with spans per-char,
+      // keeping the red dot as a child of the U span.
+      const chars = text.split('');
+      let html = '';
+      let uIndex = text.indexOf('U');
+
+      chars.forEach(function(c, i) {
+        if (c === ' ') {
+          html += ' ';
+        } else if (i === uIndex) {
+          html += '<span class="logo-u-wrap"><span class="logo-red-dot"></span><span data-char="' + c + '" data-locked="false">' + GLYPHS[Math.floor(Math.random() * GLYPHS.length)] + '</span></span>';
+        } else {
+          html += '<span data-char="' + c + '" data-locked="false">' + GLYPHS[Math.floor(Math.random() * GLYPHS.length)] + '</span>';
+        }
+      });
+
+      el.innerHTML = html;
+      el.style.opacity = '1';
+
+      const spans = el.querySelectorAll('span[data-char]');
+      const lockTimes = Array.from(spans).map(function(_, i) {
+        return delay + (N > 1 ? (i / (N - 1)) * TOTAL : 0) + 80;
+      });
+
+      const start = performance.now();
+
+      function tick(now) {
+        var allLocked = true;
+        spans.forEach(function(sp, i) {
+          if (sp.dataset.locked === 'true') return;
+          if (now - start >= lockTimes[i] - delay) {
+            sp.textContent = sp.dataset.char;
+            sp.dataset.locked = 'true';
+          } else {
+            allLocked = false;
+            sp.textContent = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+          }
+        });
+        if (!allLocked) {
+          requestAnimationFrame(tick);
+        } else {
+          setTimeout(function() { el.classList.add('flicker-anim'); }, 120);
+        }
+      }
+
+      setTimeout(function() { requestAnimationFrame(tick); }, delay);
+    }
+
+    /* ─── FIELD VALIDATION HELPERS ──────────────────────── */
+    function setError(inputId, errorId, message) {
+      var input = document.getElementById(inputId);
+      var error = document.getElementById(errorId);
+      input.classList.add('has-error');
+      error.textContent = message;
+      error.classList.add('visible');
+    }
+
+    function clearError(inputId, errorId) {
+      var input = document.getElementById(inputId);
+      var error = document.getElementById(errorId);
+      input.classList.remove('has-error');
+      error.classList.remove('visible');
+      error.textContent = '';
+    }
+
+    function setLoading(btnId, labelId, isLoading) {
+      var btn = document.getElementById(btnId);
+      var label = document.getElementById(labelId);
+      if (isLoading) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        label.textContent = 'VERIFICANDO...';
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    }
+
+    function setSuccess(btnId, labelId, message) {
+      var btn = document.getElementById(btnId);
+      var label = document.getElementById(labelId);
+      btn.disabled = true;
+      btn.classList.remove('loading');
+      btn.classList.add('success');
+      label.textContent = message;
+    }
+
+    /* ─── LOGIN HANDLER ─────────────────────────────────── */
+    function handleLogin() {
+      // Clear previous
+      clearError('login-email', 'login-email-error');
+      clearError('login-password', 'login-password-error');
+      document.getElementById('login-error-banner').classList.remove('visible');
+
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+      var valid = true;
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError('login-email', 'login-email-error', '// IDENTIFICADOR NO VÁLIDO');
+        valid = false;
+      }
+
+      if (!password || password.length < 8) {
+        setError('login-password', 'login-password-error', '// CÓDIGO INSUFICIENTE — MÍN. 8 CARACTERES');
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      setLoading('login-submit', 'login-btn-label', true);
+
+      // Simulate async auth
+      setTimeout(function() {
+        setLoading('login-submit', 'login-btn-label', false);
+        // Simulate failure for demo (wrong credentials)
+        if (email !== 'agente@obscura.es') {
+          document.getElementById('login-error-banner').classList.add('visible');
+          document.getElementById('login-submit').disabled = false;
+        } else {
+          setSuccess('login-submit', 'login-btn-label', 'ACCESO CONCEDIDO ✓');
+        }
+      }, 1500);
+    }
+
+    /* ─── REGISTRO HANDLER ──────────────────────────────── */
+    function handleRegistro() {
+      clearError('reg-username', 'reg-username-error');
+      clearError('reg-email', 'reg-email-error');
+      clearError('reg-password', 'reg-password-error');
+      clearError('reg-confirm', 'reg-confirm-error');
+
+      var username = document.getElementById('reg-username').value.trim();
+      var email    = document.getElementById('reg-email').value.trim();
+      var password = document.getElementById('reg-password').value;
+      var confirm  = document.getElementById('reg-confirm').value;
+      var valid    = true;
+
+      if (!username || username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+        setError('reg-username', 'reg-username-error', '// MÍN. 3 CARACTERES — SOLO ALFANUMÉRICOS Y _');
+        valid = false;
+      }
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError('reg-email', 'reg-email-error', '// IDENTIFICADOR NO VÁLIDO');
+        valid = false;
+      }
+
+      if (!password || password.length < 8) {
+        setError('reg-password', 'reg-password-error', '// CÓDIGO INSUFICIENTE — MÍN. 8 CARACTERES');
+        valid = false;
+      }
+
+      if (password && confirm !== password) {
+        setError('reg-confirm', 'reg-confirm-error', '// LOS CÓDIGOS NO COINCIDEN');
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      setLoading('reg-submit', 'reg-btn-label', true);
+
+      setTimeout(function() {
+        setSuccess('reg-submit', 'reg-btn-label', 'CREDENCIALES CREADAS ✓');
+      }, 1500);
+    }
+
+    /* ─── INIT ──────────────────────────────────────────── */
+    window.addEventListener('load', function() {
+      decryptTitle(document.getElementById('logo-login'), 600);
+    });
+
+    // Enter key submits
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter') return;
+      var loginVisible = document.getElementById('view-login').style.display !== 'none';
+      if (loginVisible) handleLogin();
+      else handleRegistro();
+    });
+  </script>
+
+</body>
+</html>
