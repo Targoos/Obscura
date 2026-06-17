@@ -13,6 +13,7 @@ export default defineNuxtConfig({
     { path: "~/components/admin", prefix: "" },
     { path: "~/components/auth", prefix: "" },
     { path: "~/components/explorer", prefix: "" },
+    { path: "~/components/timeline", prefix: "" },
   ],
 
   // Force dark mode — Obscura has no light theme.

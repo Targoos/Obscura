@@ -1,4 +1,17 @@
 <script setup lang="ts">
+const props = withDefaults(
+  defineProps<{
+    title?: string;
+    subtitle?: string;
+    counter?: string;
+  }>(),
+  {
+    title: "EXPLORAR",
+    subtitle: "// ARCHIVO — EXPLORADOR DE CASOS",
+    counter: "847 EXPEDIENTES ARCHIVADOS",
+  },
+);
+
 const GLYPHS = "█▓▒░╬╫╪╩╦╣╠═╚╔╝╗▀▄■□▪▫◆◇◈◉○●×+";
 
 const titleEl = ref<HTMLHeadingElement | null>(null);
@@ -39,30 +52,30 @@ function decryptTitle(el: HTMLElement, text: string, duration: number) {
 
 onMounted(() => {
   setTimeout(() => {
-    if (titleEl.value) decryptTitle(titleEl.value, "EXPLORAR", 1200);
+    if (titleEl.value) decryptTitle(titleEl.value, props.title, 1200);
   }, 600);
 });
 </script>
 
 <template>
-  <section class="explorer-header" aria-label="Explorador de casos">
+  <section class="explorer-header" :aria-label="props.title.toLowerCase()">
     <div class="eh-bg" aria-hidden="true" />
     <div class="eh-grid" aria-hidden="true" />
     <div class="eh-vignette" aria-hidden="true" />
 
     <div class="eh-inner">
       <div class="eh-id text-mono-data" aria-hidden="true">
-        // ARCHIVO — EXPLORADOR DE CASOS
+        {{ props.subtitle }}
       </div>
       <h1
         ref="titleEl"
         class="eh-title text-mystery-title"
-        aria-label="Explorar"
+        :aria-label="props.title"
       >
-        EXPLORAR
+        {{ props.title }}
       </h1>
       <div class="eh-count text-mono-data" role="status">
-        847 EXPEDIENTES ARCHIVADOS
+        {{ props.counter }}
       </div>
     </div>
   </section>

@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBSCURA — Cronología</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=Crimson+Text:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --color-bg:           #080808;
+  --color-surface:      #0f0f0f;
+  --color-surface-2:    #161616;
+  --color-border:       #1f1f1f;
+  --color-muted:        #444444;
+  --color-text:         #d4d4d4;
+  --color-accent:       #cc0000;
+  --color-accent-dim:   #7a0000;
+  --color-classified:   #ff6600;
+  --color-open:         #22994d;
+  --color-unresolved:   #b8860b;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono:    'IBM Plex Mono', 'Menlo', monospace;
+  --font-quote:   'Crimson Text', Georgia, serif;
+  --radius: 4px;
+  --header-h: 64px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: auto; }
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Film grain overlay */
+.film-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Scanline overlay */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.07) 3px,
+    rgba(0,0,0,0.07) 4px
+  );
+}
+
+/* Keyframes */
+@keyframes flicker {
+  0%, 97%, 100% { opacity: 1; }
+  97.5% { opacity: 0.6; }
+  98% { opacity: 0.9; }
+  98.5% { opacity: 0.4; }
+  99% { opacity: 1; }
+}
+
+@keyframes flickerFast {
+  0%, 94%, 100% { opacity: 1; }
+  95% { opacity: 0.5; }
+  96% { opacity: 0.85; }
+  97% { opacity: 0.3; }
+  98% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================== HEADER ===================== */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-h);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, border-bottom 0.3s ease;
+}
+
+.app-header.scrolled {
+  background: rgba(15,15,15,0.93);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header-logo {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--color-text);
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+  animation: flicker 12s 2s infinite;
+}
+
+.logo-u-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.header-nav a {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 3px;
+}
+
+.header-nav a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.header-nav a:hover::after,
+.header-nav a.active::after {
+  transform: scaleX(1);
+}
+
+.header-nav a.active {
+  color: var(--color-text);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-search:hover {
+  border-color: var(--color-muted);
+  color: var(--color-text);
+}
+
+.btn-search kbd {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-muted);
+}
+
+.btn-login {
+  padding: 6px 14px;
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-login:hover {
+  background: rgba(204,0,0,0.08);
+}
+
+/* ===================== PAGE HEADER ===================== */
+.page-header {
+  margin-top: var(--header-h);
+  height: 200px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 100% at 50% 0%,   rgba(22, 16, 10, 0.95) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 80%  at 0%   50%,  rgba(12, 9,  6,  0.8)  0%, transparent 55%),
+    radial-gradient(ellipse 50% 80%  at 100% 50%,  rgba(12, 9,  6,  0.8)  0%, transparent 55%),
+    radial-gradient(ellipse 100% 60% at 50% 100%,  #080808                0%, #080808 70%, transparent 100%);
+  text-align: center;
+  padding: 0 48px;
+}
+
+.page-header-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, transparent 0, transparent 79px, rgba(255,255,255,0.012) 79px, rgba(255,255,255,0.012) 80px),
+    repeating-linear-gradient(0deg,  transparent 0, transparent 79px, rgba(255,255,255,0.012) 79px, rgba(255,255,255,0.012) 80px);
+}
+
+.page-header-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.05) 3px,
+    rgba(0,0,0,0.05) 4px
+  );
+}
+
+.page-header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.section-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  animation: slideUp 0.4s 0.2s both;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--color-text);
+  line-height: 1;
+  opacity: 0;
+  visibility: hidden;
+  margin-bottom: 10px;
+}
+
+.page-title.flicker-anim {
+  animation: flicker 12s 1s infinite;
+}
+
+.page-subtitle {
+  font-family: var(--font-quote);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--color-muted);
+  margin-bottom: 8px;
+  animation: slideUp 0.4s 0.6s both;
+}
+
+.page-year-range {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.18em;
+  animation: slideUp 0.4s 0.8s both;
+}
+
+/* ===================== TIMELINE CONTROLS ===================== */
+.timeline-controls {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 900;
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
+  padding: 12px 48px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.controls-sort {
+  display: flex;
+  align-items: center;
+}
+
+.btn-sort {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--color-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  padding: 5px 12px;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-sort:hover {
+  border-color: var(--color-muted);
+  color: var(--color-text);
+}
+
+.controls-jump {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controls-jump-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--color-muted);
+  margin-right: 4px;
+  text-transform: uppercase;
+}
+
+.btn-jump {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--color-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-jump:hover {
+  border-color: var(--color-accent-dim);
+  color: var(--color-accent);
+}
+
+.controls-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.filter-range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-range-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.filter-year-display {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text);
+  letter-spacing: 0.1em;
+  min-width: 100px;
+  text-align: center;
+}
+
+.filter-range-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 140px;
+  height: 2px;
+  background: var(--color-border);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  border: 2px solid var(--color-bg);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  border: 2px solid var(--color-bg);
+}
+
+/* ===================== TIMELINE MAIN ===================== */
+.timeline-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 48px 80px;
+  position: relative;
+}
+
+.timeline-line {
+  position: absolute;
+  left: calc(50%);
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--color-accent);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Decade block */
+.decade-block {
+  margin-bottom: 16px;
+}
+
+.decade-label {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 32px 0 20px;
+  position: relative;
+}
+
+.decade-label-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.decade-label-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding: 0 20px;
+  white-space: nowrap;
+}
+
+/* Timeline entry */
+.timeline-entry {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  margin-bottom: 20px;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.timeline-entry.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Connector dot */
+.connector {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+.connector-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--color-accent);
+  background: var(--color-bg);
+  flex-shrink: 0;
+}
+
+/* Year label */
+.entry-year {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  padding: 16px 20px 16px 0;
+}
+
+.entry-year.right {
+  text-align: left;
+  padding: 16px 0 16px 20px;
+}
+
+.entry-year.left {
+  text-align: right;
+}
+
+.entry-empty {
+  /* placeholder for alternating layout */
+}
+
+/* Card */
+.entry-card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+.entry-card:hover {
+  border-color: var(--color-accent-dim);
+  box-shadow: 0 0 20px rgba(204,0,0,0.08);
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid;
+  margin-bottom: 8px;
+}
+
+.badge-clasificado {
+  color: var(--color-classified);
+  border-color: rgba(255,102,0,0.4);
+  background: rgba(255,102,0,0.04);
+}
+
+.badge-sin-resolver {
+  color: var(--color-unresolved);
+  border-color: rgba(184,134,11,0.4);
+  background: rgba(184,134,11,0.04);
+}
+
+.badge-archivado {
+  color: var(--color-muted);
+  border-color: rgba(68,68,68,0.4);
+  background: transparent;
+}
+
+.badge-abierto {
+  color: var(--color-open);
+  border-color: rgba(34,153,77,0.4);
+  background: rgba(34,153,77,0.04);
+}
+
+/* Card internals */
+.card-case-id {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-muted);
+  letter-spacing: 0.22em;
+  margin-bottom: 4px;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-text);
+  margin: 6px 0 8px;
+  line-height: 1.3;
+}
+
+.card-summary {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.card-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 3px 8px;
+  border-radius: 2px;
+  color: var(--color-muted);
+}
+
+.card-link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-muted);
+  text-decoration: none;
+  letter-spacing: 0.12em;
+  transition: color 0.2s;
+}
+
+.card-link:hover {
+  color: var(--color-accent);
+}
+
+/* ===================== FOOTER ===================== */
+.app-footer {
+  border-top: 1px dashed var(--color-accent);
+  padding: 40px 48px;
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-logo-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.footer-tagline {
+  font-family: var(--font-quote);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.footer-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-nav a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--color-muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.footer-nav a:hover {
+  color: var(--color-text);
+}
+
+.footer-stamp {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--color-muted);
+  text-align: right;
+  text-transform: uppercase;
+  line-height: 1.8;
+}
+
+/* ===================== MOBILE ===================== */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 20px;
+  }
+
+  .header-nav {
+    display: none;
+  }
+
+  .page-header {
+    padding: 0 20px;
+    height: auto;
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+
+  .timeline-controls {
+    padding: 12px 20px;
+    gap: 8px;
+  }
+
+  .controls-filter {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .filter-range-wrap {
+    flex-wrap: wrap;
+  }
+
+  .timeline-section {
+    padding: 24px 20px 60px 44px;
+  }
+
+  .timeline-line {
+    left: 20px;
+  }
+
+  .timeline-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-left: 24px;
+    position: relative;
+  }
+
+  .timeline-entry .connector {
+    position: absolute;
+    left: -16px;
+    top: 8px;
+    padding-top: 0;
+  }
+
+  .entry-year {
+    font-size: 22px;
+    color: var(--color-accent);
+    text-align: left;
+    padding: 0 0 8px 0;
+  }
+
+  .entry-year.right,
+  .entry-year.left {
+    text-align: left;
+    padding: 0 0 8px 0;
+    order: -1;
+  }
+
+  .entry-card {
+    width: 100%;
+    order: 1;
+  }
+
+  .entry-empty {
+    display: none;
+  }
+
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .footer-nav {
+    align-items: flex-start;
+  }
+
+  .footer-stamp {
+    text-align: left;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Film grain -->
+<div class="film-grain" aria-hidden="true"></div>
+
+<!-- Scanlines -->
+<div class="scanlines" aria-hidden="true"></div>
+
+<!-- ===================== HEADER ===================== -->
+<header class="app-header" id="app-header">
+  <a href="#" class="header-logo">
+    OBS<span style="position:relative;">U<span class="logo-u-dot"></span></span>RA
+  </a>
+  <nav class="header-nav">
+    <a href="#">EXPLORAR</a>
+    <a href="#">MAPA</a>
+    <a href="#" class="active">CRONOLOGÍA</a>
+  </nav>
+  <div class="header-actions">
+    <button class="btn-search">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="5" cy="5" r="3.5"/>
+        <line x1="7.8" y1="7.8" x2="11" y2="11"/>
+      </svg>
+      <kbd>⌘K</kbd>
+    </button>
+    <button class="btn-login">LOGIN</button>
+  </div>
+</header>
+
+<!-- ===================== PAGE HEADER ===================== -->
+<div class="page-header">
+  <div class="page-header-grid" aria-hidden="true"></div>
+  <div class="page-header-scanlines" aria-hidden="true"></div>
+  <div class="page-header-content">
+    <div class="section-id">// ARCHIVO — LÍNEA TEMPORAL</div>
+    <h1 class="page-title" id="page-title">CRONOLOGÍA</h1>
+    <p class="page-year-range">561 casos · desde el año 1 hasta 2024</p>
+  </div>
+</div>
+
+<!-- ===================== TIMELINE CONTROLS ===================== -->
+<div class="timeline-controls" id="timeline-controls">
+  <div class="controls-sort">
+    <button class="btn-sort" id="btn-sort">CRONOLÓGICO ↑</button>
+  </div>
+  <div class="controls-jump">
+    <span class="controls-jump-label">IR A:</span>
+    <button class="btn-jump" data-century="19">SIGLO XIX</button>
+    <button class="btn-jump" data-century="20">SIGLO XX</button>
+    <button class="btn-jump" data-century="21">SIGLO XXI</button>
+  </div>
+  <div class="controls-filter">
+    <div class="filter-range-wrap">
+      <span class="filter-range-label">PERÍODO</span>
+      <div class="filter-range-inputs">
+        <input type="range" id="range-from" min="1500" max="2024" value="1500">
+        <input type="range" id="range-to"   min="1500" max="2024" value="2024">
+      </div>
+      <span class="filter-year-display" id="year-display">1500 — 2024</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TIMELINE ===================== -->
+<section class="timeline-section" id="timeline-section">
+  <div class="timeline-line" aria-hidden="true"></div>
+  <div id="timeline-container"></div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="app-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo-name">OBSCURA</div>
+      <div class="footer-tagline">Algunos archivos no deberían existir.</div>
+    </div>
+    <nav class="footer-nav">
+      <a href="#">EXPLORAR</a>
+      <a href="#">MAPA</a>
+      <a href="#">CRONOLOGÍA</a>
+      <a href="#">CASOS</a>
+    </nav>
+    <div class="footer-stamp">
+      CLASIFICADO — USO INTERNO<br>
+      NIVEL DE ACCESO: RESTRINGIDO<br>
+      © OBSCURA ARCHIVE
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===================== DATA =====================
+const CASES = [
+  { id:'OBX-1561-0001', year:1561, title:'La Batalla Aérea de Núremberg', estado:'archivado', clas:'archivado', categoria:'PARANORMAL', country:'🇩🇪 ALEMANIA', summary:'Cientos de ciudadanos presencian una batalla en el cielo entre objetos luminosos. Grabado en xilografía por Hans Glaser. Ninguna explicación oficial emitida.' },
+  { id:'OBX-1692-0002', year:1692, title:'Los Juicios de Salem', estado:'archivado', clas:'archivado', categoria:'CULTO', country:'🇺🇸 EEUU', summary:'Veinte personas ejecutadas tras acusaciones de brujería en Salem, Massachusetts. Los documentos del tribunal revelan irregularidades deliberadas en las pruebas.' },
+  { id:'OBX-1908-0003', year:1908, title:'Evento Tunguska', estado:'archivado', clas:'archivado', categoria:'FENÓMENO', country:'🇷🇺 RUSIA', summary:'Una explosión de 2.000 km² arrasa 80 millones de árboles en Siberia. No se encontró ningún cráter. La causa aún genera debate científico cien años después.' },
+  { id:'OBX-1943-0004', year:1943, title:'Experimento Filadelfia', estado:'archivado', clas:'archivado', categoria:'EXPERIMENTO', country:'🇺🇸 EEUU', summary:'Se alega que el USS Eldridge fue hecho invisible electromagnéticamente por la Armada estadounidense. Los documentos oficiales contradicen el testimonio de testigos.' },
+  { id:'OBX-1945-0005', year:1945, title:'El Vuelo 19 del Triángulo de Bermudas', estado:'archivado', clas:'sin-resolver', categoria:'DESAPARICIÓN', country:'🇺🇸 EEUU', summary:'Cinco bombarderos TBF Avenger desaparecen en el Triángulo de las Bermudas. El avión de rescate también desaparece. Sin restos hallados tras décadas de búsqueda.' },
+  { id:'OBX-1947-0006', year:1947, title:'Incidente Roswell', estado:'clasificado', clas:'clasificado', categoria:'PARANORMAL', country:'🇺🇸 EEUU', summary:'Objeto no identificado cae en el Rancho Foster. El ejército confirma un disco volador. Horas después, retracta y declara ser un globo meteorológico de alta altitud.' },
+  { id:'OBX-1952-0007', year:1952, title:'Los Avistamientos de Washington D.C.', estado:'archivado', clas:'archivado', categoria:'FENÓMENO', country:'🇺🇸 EEUU', summary:'Múltiples OVNIs detectados en radar sobre la capital federal durante dos semanas. Interceptores F-94 desplegados. Los objetos desaparecen al acercarse los aviones.' },
+  { id:'OBX-1953-0008', year:1953, title:'Proyecto MKULTRA', estado:'clasificado', clas:'clasificado', categoria:'EXPERIMENTO', country:'🇺🇸 EEUU', summary:'Programa de control mental de la CIA que usó LSD, hipnosis y tortura psicológica en sujetos no informados. Archivos destruidos en 1973 por orden directa.' },
+  { id:'OBX-1959-0009', year:1959, title:'La Masacre del Paso Dyatlov', estado:'sin-resolver', clas:'sin-resolver', categoria:'PARANORMAL', country:'🇷🇺 RUSIA', summary:'Nueve excursionistas hallados muertos en circunstancias inexplicables. Las carpas rasgadas desde dentro. Heridas incompatibles con causa natural conocida.' },
+  { id:'OBX-1961-0010', year:1961, title:'Abducción de Betty y Barney Hill', estado:'archivado', clas:'archivado', categoria:'PARANORMAL', country:'🇺🇸 EEUU', summary:'Primera abducción alienígena documentada en EEUU. Los testigos describen bajo hipnosis un examen médico a bordo de una nave. Los mapas estelares coinciden.' },
+  { id:'OBX-1966-0011', year:1966, title:'El Hombre Polilla de Point Pleasant', estado:'sin-resolver', clas:'sin-resolver', categoria:'PARANORMAL', country:'🇺🇸 EEUU', summary:'Decenas de testigos reportan una criatura alada de ojos rojos durante 13 meses. El derrumbe del puente Silver Bridge coincide exactamente con el cese de los avistamientos.' },
+  { id:'OBX-1969-0012', year:1969, title:'Zodiac — El Asesino Sin Rostro', estado:'sin-resolver', clas:'sin-resolver', categoria:'ASESINATO', country:'🇺🇸 EEUU', summary:'Al menos cinco asesinatos confirmados en el área de la Bahía de San Francisco. Envía cartas cifradas a la prensa. El asesino nunca fue identificado.' },
+  { id:'OBX-1974-0013', year:1974, title:'Arboleda del Bohemio — Rituales de Élite', estado:'clasificado', clas:'clasificado', categoria:'CONSPIRACIÓN', country:'🇺🇸 EEUU', summary:'Rituales anuales de élites globales en el Bosque Bohemio. Documentado por activistas en 2000. Los participantes y el contenido siguen clasificados.' },
+  { id:'OBX-1977-0014', year:1977, title:'Señal WOW! — SETI', estado:'sin-resolver', clas:'sin-resolver', categoria:'FENÓMENO', country:'🇺🇸 EEUU', summary:'Una señal de radiofrecuencia de 72 segundos desde la constelación Sagitario. Nunca ha sido repetida ni explicada. El astrónomo Jerry Ehman escribió "Wow!" en el margen.' },
+  { id:'OBX-1978-0015', year:1978, title:'Desaparición de Frederick Valentich', estado:'sin-resolver', clas:'sin-resolver', categoria:'DESAPARICIÓN', country:'🇦🇺 AUSTRALIA', summary:'El piloto informa de un objeto metálico no identificado sobrevolando su aeronave. Transmite sus coordenadas y desaparece. El avión jamás fue hallado.' },
+  { id:'OBX-1978-0016', year:1978, title:'El Templo del Pueblo — Jonestown', estado:'archivado', clas:'archivado', categoria:'CULTO', country:'🇬🇾 GUYANA', summary:'918 miembros del People\'s Temple mueren en el mayor homicidio-suicidio masivo. Las cintas de audio revelan coacción sistemática por parte del líder Jim Jones.' },
+  { id:'OBX-1980-0017', year:1980, title:'Incidente de Rendlesham Forest', estado:'archivado', clas:'archivado', categoria:'PARANORMAL', country:'🇬🇧 REINO UNIDO', summary:'Soldados de la USAF reportan luces y un objeto triangular en el bosque. Rastros en el suelo y mediciones de radiación anómalas fueron registradas oficialmente.' },
+  { id:'OBX-1994-0018', year:1994, title:'Ariel School — Zimbabwe', estado:'archivado', clas:'sin-resolver', categoria:'PARANORMAL', country:'🇿🇼 ZIMBABUE', summary:'62 niños de primaria reportan ver aterrizaje de nave y comunicación telepática con ocupantes. El psiquiatra de Harvard John Mack entrevistó a los testigos.' },
+  { id:'OBX-2014-0019', year:2014, title:'MH370 — Vuelo Fantasma', estado:'sin-resolver', clas:'sin-resolver', categoria:'DESAPARICIÓN', country:'🇲🇾 MALASIA', summary:'El Boeing 777 desaparece con 239 personas. Señales de satélite revelan un giro deliberado hacia el sur. El paradero final y el motivo siguen sin conocerse.' },
+  { id:'OBX-2023-0020', year:2023, title:'Audiencias UAP del Congreso de EEUU', estado:'abierto', clas:'abierto', categoria:'FENÓMENO', country:'🇺🇸 EEUU', summary:'Ex oficial de inteligencia David Grusch testifica bajo juramento ante el Congreso sobre programas de recuperación de naves no humanas activos y en curso.' },
+];
+
+// ===================== STATE =====================
+let sortAsc = true;
+let filterFrom = 1500;
+let filterTo = 2024;
+
+// ===================== UTILS =====================
+function getDecade(year) {
+  return Math.floor(year / 10) * 10;
+}
+
+function getCentury(year) {
+  if (year < 1800) return '18';
+  if (year < 1900) return '19';
+  if (year < 2000) return '20';
+  return '21';
+}
+
+function getDecadeLabel(decade) {
+  return decade + ' — ' + (decade + 9);
+}
+
+function getBadgeClass(clas) {
+  if (clas === 'clasificado') return 'badge-clasificado';
+  if (clas === 'sin-resolver') return 'badge-sin-resolver';
+  if (clas === 'abierto') return 'badge-abierto';
+  return 'badge-archivado';
+}
+
+function getBadgeLabel(clas) {
+  if (clas === 'clasificado') return 'CLASIFICADO';
+  if (clas === 'sin-resolver') return 'SIN RESOLVER';
+  if (clas === 'abierto') return 'CASO ABIERTO';
+  return 'ARCHIVADO';
+}
+
+// ===================== RENDER =====================
+function renderTimeline(asc) {
+  const container = document.getElementById('timeline-container');
+  container.innerHTML = '';
+
+  // Sort cases
+  const sorted = [...CASES].sort((a, b) => asc ? a.year - b.year : b.year - a.year);
+
+  // Group by decade
+  const decadeMap = new Map();
+  sorted.forEach(c => {
+    const decade = getDecade(c.year);
+    if (!decadeMap.has(decade)) decadeMap.set(decade, []);
+    decadeMap.get(decade).push(c);
+  });
+
+  // Get ordered decade keys
+  const decadeKeys = [...decadeMap.keys()];
+
+  let globalEntryIndex = 0;
+
+  decadeKeys.forEach(decade => {
+    const cases = decadeMap.get(decade);
+    const century = getCentury(cases[0].year);
+
+    const block = document.createElement('div');
+    block.className = 'decade-block';
+    block.setAttribute('data-decade', decade);
+    block.setAttribute('data-century', century);
+
+    // Decade label
+    const labelEl = document.createElement('div');
+    labelEl.className = 'decade-label';
+    labelEl.innerHTML = `
+      <div class="decade-label-line"></div>
+      <span class="decade-label-text">${getDecadeLabel(decade)}</span>
+      <div class="decade-label-line"></div>
+    `;
+    block.appendChild(labelEl);
+
+    // Cases
+    cases.forEach(c => {
+      const isOdd = globalEntryIndex % 2 === 0; // 0-indexed: first entry is "odd" (year left)
+      globalEntryIndex++;
+
+      const entry = document.createElement('div');
+      entry.className = 'timeline-entry';
+      entry.setAttribute('data-year', c.year);
+
+      const cardHtml = `
+        <div class="entry-card">
+          <span class="status-badge ${getBadgeClass(c.clas)}">${getBadgeLabel(c.clas)}</span>
+          <div class="card-case-id">${c.id}</div>
+          <div class="card-title">${c.title}</div>
+          <p class="card-summary">${c.summary}</p>
+          <div class="card-tags">
+            <span class="card-tag">${c.categoria}</span>
+            <span class="card-tag">${c.country}</span>
+          </div>
+          <a href="#" class="card-link">VER EXPEDIENTE →</a>
+        </div>
+      `;
+
+      const yearHtml = (side) => `<div class="entry-year ${side}">${c.year}</div>`;
+
+      const connectorHtml = `
+        <div class="connector">
+          <div class="connector-dot"></div>
+        </div>
+      `;
+
+      if (isOdd) {
+        // Year left, card right
+        entry.innerHTML = yearHtml('left') + connectorHtml + cardHtml;
+      } else {
+        // Card left, year right
+        entry.innerHTML = cardHtml + connectorHtml + yearHtml('right');
+      }
+
+      block.appendChild(entry);
+    });
+
+    container.appendChild(block);
+  });
+
+  // Re-apply filter
+  applyFilter();
+
+  // Re-observe entries
+  setupObserver();
+}
+
+// ===================== FILTER =====================
+function applyFilter() {
+  const from = filterFrom;
+  const to = filterTo;
+
+  const blocks = document.querySelectorAll('.decade-block');
+  blocks.forEach(block => {
+    const entries = block.querySelectorAll('.timeline-entry');
+    let visibleCount = 0;
+    entries.forEach(entry => {
+      const year = parseInt(entry.getAttribute('data-year'), 10);
+      if (year >= from && year <= to) {
+        entry.style.display = '';
+        visibleCount++;
+      } else {
+        entry.style.display = 'none';
+      }
+    });
+    block.style.display = visibleCount > 0 ? '' : 'none';
+  });
+}
+
+// ===================== SCROLL REVEAL =====================
+function setupObserver() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('revealed');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.timeline-entry').forEach(el => observer.observe(el));
+}
+
+// ===================== SORT =====================
+const btnSort = document.getElementById('btn-sort');
+btnSort.addEventListener('click', () => {
+  sortAsc = !sortAsc;
+  btnSort.textContent = sortAsc ? 'CRONOLÓGICO ↑' : 'CRONOLÓGICO ↓';
+  renderTimeline(sortAsc);
+});
+
+// ===================== QUICK JUMP =====================
+document.querySelectorAll('.btn-jump').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const century = btn.getAttribute('data-century');
+    const target = document.querySelector(`.decade-block[data-century="${century}"]`);
+    if (target) {
+      const offsetTop = target.getBoundingClientRect().top + window.pageYOffset - 120;
+      window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+    }
+  });
+});
+
+// ===================== YEAR RANGE FILTER =====================
+const rangeFrom = document.getElementById('range-from');
+const rangeTo   = document.getElementById('range-to');
+const yearDisp  = document.getElementById('year-display');
+
+function updateYearDisplay() {
+  let from = parseInt(rangeFrom.value, 10);
+  let to   = parseInt(rangeTo.value, 10);
+  if (from > to) {
+    // Clamp: keep them from crossing
+    if (this === rangeFrom) { from = to; rangeFrom.value = from; }
+    else { to = from; rangeTo.value = to; }
+  }
+  filterFrom = from;
+  filterTo   = to;
+  yearDisp.textContent = from + ' — ' + to;
+  applyFilter();
+}
+
+rangeFrom.addEventListener('input', function() {
+  let from = parseInt(rangeFrom.value, 10);
+  let to   = parseInt(rangeTo.value, 10);
+  if (from > to) { rangeFrom.value = to; from = to; }
+  filterFrom = from;
+  filterTo = to;
+  yearDisp.textContent = from + ' — ' + to;
+  applyFilter();
+});
+
+rangeTo.addEventListener('input', function() {
+  let from = parseInt(rangeFrom.value, 10);
+  let to   = parseInt(rangeTo.value, 10);
+  if (to < from) { rangeTo.value = from; to = from; }
+  filterFrom = from;
+  filterTo = to;
+  yearDisp.textContent = from + ' — ' + to;
+  applyFilter();
+});
+
+// ===================== HEADER SCROLL =====================
+const appHeader = document.getElementById('app-header');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 10) {
+    appHeader.classList.add('scrolled');
+  } else {
+    appHeader.classList.remove('scrolled');
+  }
+}, { passive: true });
+
+// ===================== DECRYPT TITLE =====================
+function decryptTitle(el, delay) {
+  const GLYPHS = '█▓▒░╬╫╩╦╣╠═╚╗▀▄■□×+@#$%!?~^';
+  const original = el.textContent;
+  const chars = original.split('');
+  const TOTAL = 1200;
+  el.style.opacity = '1';
+  el.style.visibility = 'visible';
+  el.textContent = chars.map(() => GLYPHS[Math.floor(Math.random() * GLYPHS.length)]).join('');
+  const scramble = setInterval(() => {
+    el.textContent = chars.map((ch, i) => {
+      if (ch === ' ') return ' ';
+      return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+    }).join('');
+  }, 45);
+  chars.forEach((ch, i) => {
+    if (ch === ' ') return;
+    const lockTime = delay + 80 + (i / Math.max(chars.length - 1, 1)) * TOTAL;
+    setTimeout(() => {
+      chars[i] = original[i];
+      el.textContent = chars.map((c, j) => {
+        if (j <= i || c === original[j]) return original[j];
+        if (original[j] === ' ') return ' ';
+        return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      }).join('');
+    }, lockTime);
+  });
+  setTimeout(() => {
+    clearInterval(scramble);
+    el.textContent = original;
+    el.classList.add('flicker-anim');
+  }, delay + 80 + TOTAL + 120);
+}
+
+// ===================== INIT =====================
+renderTimeline(sortAsc);
+
+window.addEventListener('load', () => {
+  const t = document.getElementById('page-title');
+  if (t) decryptTitle(t, 300);
+});
+</script>
+</body>
+</html>
