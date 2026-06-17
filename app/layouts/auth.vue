@@ -1,10 +1,21 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+useHead({
+  bodyAttrs: { style: "background: #080808; margin: 0; padding: 0;" },
+});
+</script>
 
 <template>
-  <div
-    class="flex items-center justify-center"
-    style="background-color: #080808; min-height: 100vh"
-  >
+  <div class="auth-layout">
     <slot />
   </div>
 </template>
+
+<style scoped>
+.auth-layout {
+  min-height: 100vh;
+  background: #080808;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OBSCURA — Error</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=Crimson+Text:ital,wght@1,400;1,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-bg:           #080808;
+      --color-surface:      #0f0f0f;
+      --color-surface-2:    #161616;
+      --color-border:       #1f1f1f;
+      --color-muted:        #444444;
+      --color-text:         #d4d4d4;
+      --color-accent:       #cc0000;
+      --color-accent-dim:   #7a0000;
+      --color-classified:   #ff6600;
+      --font-display: 'Cinzel', serif;
+      --font-body:    'IBM Plex Sans', sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
+      --font-quote:   'Crimson Text', serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Film grain overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23g)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    @keyframes flicker {
+      0%, 89%, 91%, 93%, 95%, 97%, 100% { opacity: 1; }
+      90%  { opacity: 0.35; }
+      92%  { opacity: 0.8; }
+      94%  { opacity: 0.3; }
+      96%  { opacity: 0.9; }
+    }
+    @keyframes flickerFast {
+      0%, 94%, 96%, 100% { opacity: 1; }
+      95% { opacity: 0.1; }
+    }
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .flicker-anim {
+      animation: flicker 9s infinite 2s;
+    }
+
+    /* Layout */
+    .page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Header */
+    .site-header {
+      padding: 24px 48px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .header-logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: baseline;
+      opacity: 0;
+    }
+
+    .logo-u-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .logo-red-dot {
+      position: absolute;
+      top: -3px;
+      right: -1px;
+      width: 5px;
+      height: 5px;
+      background: var(--color-accent);
+      border-radius: 50%;
+    }
+
+    /* Main */
+    .page-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px;
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    /* Variant toggle buttons */
+    .variant-toggle {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .variant-btn {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      background: transparent;
+      border: 1px solid var(--color-muted);
+      color: var(--color-muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .variant-btn.active {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .variant-btn:hover:not(.active) {
+      border-color: var(--color-text);
+      color: var(--color-text);
+    }
+
+    /* Error code */
+    .error-code {
+      font-family: var(--font-mono);
+      font-size: clamp(64px, 10vw, 96px);
+      color: var(--color-accent);
+      letter-spacing: 0.12em;
+      line-height: 1;
+      margin-bottom: 0;
+    }
+
+    /* Separator */
+    .error-separator {
+      width: 100%;
+      max-width: 480px;
+      border: none;
+      border-top: 1px dashed var(--color-accent);
+      margin: 24px auto;
+    }
+
+    /* Error title */
+    .error-title {
+      font-family: var(--font-display);
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      margin-bottom: 16px;
+    }
+
+    /* Error subtitle */
+    .error-subtitle {
+      font-family: var(--font-quote);
+      font-style: italic;
+      font-size: 18px;
+      color: var(--color-muted);
+      max-width: 420px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    /* Action buttons */
+    .error-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-ghost {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      background: transparent;
+      border: 1px solid var(--color-accent);
+      color: var(--color-text);
+      cursor: pointer;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-ghost:hover {
+      background: var(--color-accent);
+      color: #fff;
+    }
+
+    /* Stamp */
+    .error-stamp {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      border: 1.5px solid var(--color-accent);
+      padding: 5px 14px;
+      display: inline-block;
+      transform: rotate(-2deg);
+      margin-top: 32px;
+      border-radius: 2px;
+    }
+
+    /* Footer */
+    .app-footer {
+      border-top: 1px dashed var(--color-accent);
+      background: var(--color-bg);
+      padding: 28px 48px;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1440px;
+      margin: 0 auto;
+      gap: 24px;
+    }
+
+    .footer-left { display: flex; flex-direction: column; gap: 4px; }
+
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      display: flex;
+      align-items: baseline;
+    }
+
+    .footer-tagline {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-muted);
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    .footer-nav a {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-nav a:hover { color: var(--color-text); }
+
+    .footer-stamp {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-border);
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .site-header {
+        padding: 20px 24px;
+      }
+
+      .page-main {
+        padding: 48px 20px;
+      }
+
+      .error-code {
+        font-size: 64px;
+      }
+
+      .error-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .btn-ghost {
+        width: 100%;
+        text-align: center;
+      }
+
+      .app-footer {
+        padding: 24px 20px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .footer-nav {
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- Header -->
+    <header class="site-header">
+      <a href="#" class="header-logo" id="site-logo" data-text="OBSCURA">
+        OBS<span class="logo-u-wrap">U<span class="logo-red-dot"></span></span>RA
+      </a>
+    </header>
+
+    <!-- Main error content -->
+    <main class="page-main">
+      <div class="error-container">
+
+        <!-- Variant toggle -->
+        <div class="variant-toggle" role="group" aria-label="Seleccionar variante de error">
+          <button class="variant-btn active" id="btn-404" onclick="setVariant('404')">ERR-404</button>
+          <button class="variant-btn" id="btn-500" onclick="setVariant('500')">ERR-500</button>
+        </div>
+
+        <!-- Error code -->
+        <div class="error-code" id="error-code">ERR-404</div>
+
+        <!-- Separator -->
+        <hr class="error-separator" />
+
+        <!-- Title -->
+        <h1 class="error-title" id="error-title">EXPEDIENTE NO ENCONTRADO</h1>
+
+        <!-- Subtitle -->
+        <p class="error-subtitle" id="error-subtitle">
+          El archivo que buscas ha sido clasificado, movido o nunca existió.
+        </p>
+
+        <!-- Action buttons -->
+        <div class="error-actions">
+          <a href="javascript:history.back()" class="btn-ghost">← VOLVER AL ARCHIVO</a>
+          <a href="#" class="btn-ghost">IR AL INICIO</a>
+        </div>
+
+        <!-- Stamp -->
+        <div class="error-stamp">ACCESO DENEGADO</div>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">OBS<span class="logo-u-wrap">U<span class="logo-red-dot"></span></span>RA</span>
+          <span class="footer-tagline">Algunos archivos no deberían existir.</span>
+        </div>
+        <nav class="footer-nav">
+          <a href="#">EXPLORAR</a>
+          <a href="#">MAPA</a>
+          <a href="#">CRONOLOGÍA</a>
+        </nav>
+        <div class="footer-right">
+          <span class="footer-stamp">CLASIFICADO — USO INTERNO</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // decryptTitle — exact implementation
+    function decryptTitle(el, delay) {
+      var GLYPHS = '█▓▒░╬╫╩╦╣╠═╚╗▀▄■□×+@#$%!?~^';
+      var text = el.getAttribute('data-text') || el.textContent.trim();
+      var chars = text.split('');
+      var total = 1200;
+      el.style.opacity = '1';
+      el.innerHTML = chars.map(function(c) {
+        return c === ' ' ? ' ' : '<span class="dc" data-char="' + c + '">' + GLYPHS[Math.floor(Math.random() * GLYPHS.length)] + '</span>';
+      }).join('');
+      var spans = el.querySelectorAll('.dc');
+      spans.forEach(function(span, i) {
+        var lockAt = delay + (spans.length > 1 ? (i / (spans.length - 1)) * (total - 80) : 0) + 80;
+        var ticker = setInterval(function() {
+          span.textContent = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        }, 45);
+        setTimeout(function() {
+          clearInterval(ticker);
+          span.textContent = span.getAttribute('data-char');
+        }, lockAt);
+      });
+      var lastLock = delay + total + 120;
+      setTimeout(function() { el.classList.add('flicker-anim'); }, lastLock);
+    }
+
+    // Variant data
+    var variants = {
+      '404': {
+        code:     'ERR-404',
+        title:    'EXPEDIENTE NO ENCONTRADO',
+        subtitle: 'El archivo que buscas ha sido clasificado, movido o nunca existió.'
+      },
+      '500': {
+        code:     'ERR-500',
+        title:    'ERROR DEL SISTEMA',
+        subtitle: 'Un fallo interno ha comprometido el acceso al archivo. Inténtalo de nuevo.'
+      }
+    };
+
+    var currentVariant = '404';
+
+    function setVariant(v) {
+      if (v === currentVariant) return;
+      currentVariant = v;
+
+      var data = variants[v];
+
+      document.getElementById('error-code').textContent    = data.code;
+      document.getElementById('error-title').textContent   = data.title;
+      document.getElementById('error-subtitle').textContent = data.subtitle;
+
+      document.getElementById('btn-404').classList.toggle('active', v === '404');
+      document.getElementById('btn-500').classList.toggle('active', v === '500');
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', function() {
+      var logo = document.getElementById('site-logo');
+      // Rebuild inner HTML preserving red dot structure after decrypt
+      logo.setAttribute('data-text', 'OBSCURA');
+      decryptTitle(logo, 300);
+    });
+  </script>
+</body>
+</html>
