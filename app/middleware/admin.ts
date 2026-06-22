@@ -1,9 +1,18 @@
-export default defineNuxtRouteMiddleware(() => {
-  const { user } = useAuth();
+import { useAuthStore } from "~/stores/auth";
+
+export default defineNuxtRouteMiddleware(async () => {
+  const user = useSupabaseUser();
 
   if (!user.value) {
     return navigateTo("/login");
   }
 
-  // TODO: check profile role (editor | admin) via useAuthStore
+  const authStore = useAuthStore();
+  if (!authStore.profile) {
+    await authStore.fetchProfile(user.value.id);
+  }
+
+  if (!authStore.isEditor) {
+    return navigateTo("/");
+  }
 });
