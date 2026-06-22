@@ -1,0 +1,1460 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil — OBSCURA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=Crimson+Text:ital,wght@1,400;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --color-bg: #080808;
+        --color-surface: #0f0f0f;
+        --color-surface-2: #161616;
+        --color-border: #1f1f1f;
+        --color-muted: #444444;
+        --color-text: #d4d4d4;
+        --color-accent: #cc0000;
+        --color-accent-dim: #7a0000;
+        --color-classified: #ff6600;
+        --color-open: #22994d;
+        --color-unresolved: #b8860b;
+        --font-display: "Cinzel", serif;
+        --font-body: "IBM Plex Sans", sans-serif;
+        --font-mono: "IBM Plex Mono", monospace;
+        --radius: 4px;
+        --header-h: 64px;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      body {
+        background: var(--color-bg);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+      }
+
+      @keyframes flicker {
+        0%,
+        89%,
+        91%,
+        93%,
+        95%,
+        97%,
+        100% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 0.35;
+        }
+        92% {
+          opacity: 0.8;
+        }
+        94% {
+          opacity: 0.3;
+        }
+        96% {
+          opacity: 0.9;
+        }
+      }
+      @keyframes flickerFast {
+        0%,
+        94%,
+        96%,
+        100% {
+          opacity: 1;
+        }
+        95% {
+          opacity: 0.1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes scanlineAnim {
+        from {
+          transform: translateY(-100%);
+        }
+        to {
+          transform: translateY(200vh);
+        }
+      }
+
+      .film-grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.03;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23g)'/%3E%3C/svg%3E");
+        background-size: 400px 400px;
+      }
+      .scanline-overlay {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9998;
+        overflow: hidden;
+      }
+      .scanline-overlay::after {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 180px;
+        background: linear-gradient(
+          to bottom,
+          transparent 0%,
+          rgba(255, 255, 255, 0.007) 50%,
+          transparent 100%
+        );
+        animation: scanlineAnim 18s linear infinite;
+      }
+
+      /* APP HEADER */
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 200;
+        height: var(--header-h);
+        display: flex;
+        align-items: center;
+        padding: 0 48px;
+        background: transparent;
+        border-bottom: 1px solid transparent;
+        transition:
+          background 0.35s,
+          border-color 0.35s;
+      }
+      .app-header.scrolled {
+        background: rgba(15, 15, 15, 0.94);
+        border-bottom-color: var(--color-border);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+      .header-logo {
+        font-family: var(--font-display);
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        display: flex;
+        align-items: baseline;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .flicker-anim {
+        animation: flicker 12s 2s infinite;
+      }
+      .logo-u-wrap {
+        position: relative;
+        display: inline-block;
+      }
+      .logo-red-dot {
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        background: var(--color-accent);
+        border-radius: 50%;
+        animation: flickerFast 6s 1.5s infinite;
+      }
+      .header-nav {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+        margin: 0 auto;
+      }
+      .header-nav a {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        transition: color 0.2s;
+        position: relative;
+      }
+      .header-nav a::after {
+        content: "";
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--color-accent);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.25s;
+      }
+      .header-nav a:hover {
+        color: var(--color-text);
+      }
+      .header-nav a:hover::after {
+        transform: scaleX(1);
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-shrink: 0;
+      }
+      .search-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: none;
+        border: 1px solid var(--color-border);
+        color: var(--color-muted);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        padding: 6px 12px;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .search-btn:hover {
+        border-color: var(--color-muted);
+        color: var(--color-text);
+      }
+      .search-btn svg {
+        width: 14px;
+        height: 14px;
+      }
+      .search-kbd {
+        border: 1px solid var(--color-border);
+        border-radius: 2px;
+        padding: 1px 4px;
+        font-size: 9px;
+        color: var(--color-border);
+      }
+      .login-btn {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        background: none;
+        border: 1px solid var(--color-accent);
+        padding: 8px 20px;
+        border-radius: var(--radius);
+        transition:
+          background 0.2s,
+          color 0.2s,
+          box-shadow 0.2s;
+      }
+      .login-btn:hover {
+        background: var(--color-accent);
+        color: #fff;
+        box-shadow: 0 0 22px rgba(204, 0, 0, 0.3);
+      }
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        background: none;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+      }
+      .hamburger span {
+        display: block;
+        width: 20px;
+        height: 1px;
+        background: var(--color-text);
+      }
+
+      /* PAGE WRAPPER */
+      .page-wrapper {
+        margin-top: var(--header-h);
+        min-height: calc(100vh - var(--header-h));
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* DOSSIER HEADER */
+      .dossier-header {
+        position: relative;
+        background: var(--color-bg);
+        overflow: hidden;
+      }
+      .dossier-header-bg {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            ellipse 60% 100% at 0% 50%,
+            rgba(12, 8, 5, 0.9) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 60% 100% at 100% 50%,
+            rgba(12, 8, 5, 0.9) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 100% 60% at 50% 0%,
+            rgba(20, 14, 8, 0.97) 0%,
+            transparent 60%
+          );
+      }
+      .dossier-header-grid {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(
+            90deg,
+            transparent 0,
+            transparent 79px,
+            rgba(255, 255, 255, 0.008) 79px,
+            rgba(255, 255, 255, 0.008) 80px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            transparent 0,
+            transparent 79px,
+            rgba(255, 255, 255, 0.008) 79px,
+            rgba(255, 255, 255, 0.008) 80px
+          );
+      }
+      .dossier-header-scanlines {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 2px,
+          rgba(0, 0, 0, 0.04) 2px,
+          rgba(0, 0, 0, 0.04) 4px
+        );
+      }
+      .dossier-header-inner {
+        position: relative;
+        z-index: 2;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 48px 48px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+      }
+
+      /* IDENTITY LEFT */
+      .agent-identity {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+      }
+      .agent-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 1px solid var(--color-accent);
+        background: var(--color-surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-weight: 600;
+        color: var(--color-text);
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+      }
+      .agent-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .agent-username {
+        font-family: var(--font-display);
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        line-height: 1;
+      }
+      .agent-badges {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .role-badge {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--color-classified);
+        border: 1px solid var(--color-classified);
+        padding: 4px 10px;
+        border-radius: var(--radius);
+        background: rgba(255, 102, 0, 0.04);
+      }
+      .agent-points {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        letter-spacing: 0.1em;
+        color: var(--color-accent);
+        font-weight: 500;
+      }
+      .agent-since {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+      }
+
+      /* STATS RIGHT */
+      .agent-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px 40px;
+        flex-shrink: 0;
+      }
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .stat-label {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+      }
+      .stat-value {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--color-text);
+        letter-spacing: 0.02em;
+      }
+
+      /* TAB BAR */
+      .tab-bar-wrap {
+        position: relative;
+        z-index: 2;
+        margin-top: 40px;
+      }
+      .tab-bar {
+        display: flex;
+        align-items: stretch;
+        border-top: 1px solid var(--color-border);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-surface);
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .tab-bar::-webkit-scrollbar {
+        display: none;
+      }
+      .tab-btn {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        padding: 16px 28px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          color 0.2s,
+          border-color 0.2s;
+        flex-shrink: 0;
+      }
+      .tab-btn:hover {
+        color: var(--color-text);
+      }
+      .tab-btn.active {
+        color: var(--color-text);
+        border-bottom-color: var(--color-accent);
+      }
+
+      /* CONTENT AREA */
+      .content-area {
+        flex: 1;
+        max-width: 1440px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 40px 48px 80px;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      /* SECTION LABEL */
+      .section-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .section-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        border-left: 3px solid var(--color-accent);
+        padding-left: 12px;
+      }
+      .results-count {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        margin-bottom: 24px;
+      }
+
+      /* MYSTERY CARDS */
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .mystery-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .mystery-card:hover {
+        border-color: var(--color-accent);
+        box-shadow: 0 4px 24px rgba(204, 0, 0, 0.08);
+      }
+      .card-image {
+        height: 180px;
+        position: relative;
+        overflow: hidden;
+      }
+      .card-image::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 40%,
+          rgba(8, 8, 8, 0.85) 100%
+        );
+      }
+      .card-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 2;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: var(--radius);
+      }
+      .badge-sin-resolver {
+        color: var(--color-unresolved);
+        border: 1px solid var(--color-unresolved);
+        background: rgba(184, 134, 11, 0.06);
+      }
+      .badge-clasificado {
+        color: var(--color-classified);
+        border: 1px solid var(--color-classified);
+        background: rgba(255, 102, 0, 0.06);
+      }
+      .badge-archivado {
+        color: var(--color-muted);
+        border: 1px solid var(--color-border);
+        background: rgba(68, 68, 68, 0.06);
+      }
+      .card-body {
+        padding: 16px;
+      }
+      .card-id {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        margin-bottom: 6px;
+      }
+      .card-title {
+        font-family: var(--font-display);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        margin-bottom: 10px;
+        line-height: 1.3;
+      }
+      .card-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        color: var(--color-muted);
+      }
+      .card-bottom-border {
+        height: 2px;
+        background: transparent;
+        transition: background 0.2s;
+      }
+      .mystery-card:hover .card-bottom-border {
+        background: var(--color-accent);
+      }
+      /* Card image gradients */
+      .img-dyatlov {
+        background: linear-gradient(
+          135deg,
+          #0d0d1e 0%,
+          #12101a 40%,
+          #0a0a0f 100%
+        );
+      }
+      .img-mh370 {
+        background: linear-gradient(
+          135deg,
+          #081414 0%,
+          #0a1618 40%,
+          #080c0c 100%
+        );
+      }
+      .img-zodiac {
+        background: linear-gradient(
+          135deg,
+          #1a0808 0%,
+          #120808 40%,
+          #0a0808 100%
+        );
+      }
+      .img-voynich {
+        background: linear-gradient(
+          135deg,
+          #121008 0%,
+          #0f0e08 40%,
+          #0a0908 100%
+        );
+      }
+      .img-mkul {
+        background: linear-gradient(
+          135deg,
+          #100808 0%,
+          #140a0a 40%,
+          #0c0808 100%
+        );
+      }
+      .img-belmez {
+        background: linear-gradient(
+          135deg,
+          #0a0a12 0%,
+          #08080f 40%,
+          #080808 100%
+        );
+      }
+
+      /* HISTORIAL TABLE */
+      .history-table {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .history-header {
+        display: grid;
+        grid-template-columns: 130px 1fr 140px 140px;
+        gap: 0;
+        padding: 10px 16px;
+        background: var(--color-surface-2);
+        border-bottom: 1px solid var(--color-border);
+      }
+      .history-header span {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+      }
+      .history-row {
+        display: grid;
+        grid-template-columns: 130px 1fr 140px 140px;
+        gap: 0;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--color-border);
+        border-left: 2px solid transparent;
+        transition:
+          border-left-color 0.2s,
+          background 0.15s;
+        cursor: pointer;
+        align-items: center;
+      }
+      .history-row:last-child {
+        border-bottom: none;
+      }
+      .history-row:hover {
+        border-left-color: var(--color-accent);
+        background: rgba(204, 0, 0, 0.02);
+      }
+      .history-case-id {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+      }
+      .history-title {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        padding-right: 16px;
+      }
+      .history-date {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        color: var(--color-muted);
+      }
+      .history-cat {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: var(--radius);
+        white-space: nowrap;
+        width: fit-content;
+      }
+      .cat-paranormal {
+        color: #9b59b6;
+        border: 1px solid rgba(155, 89, 182, 0.4);
+        background: rgba(155, 89, 182, 0.04);
+      }
+      .cat-desaparicion {
+        color: var(--color-classified);
+        border: 1px solid rgba(255, 102, 0, 0.4);
+        background: rgba(255, 102, 0, 0.04);
+      }
+      .cat-crimen {
+        color: var(--color-accent);
+        border: 1px solid rgba(204, 0, 0, 0.4);
+        background: rgba(204, 0, 0, 0.04);
+      }
+      .cat-conspiracion {
+        color: var(--color-unresolved);
+        border: 1px solid rgba(184, 134, 11, 0.4);
+        background: rgba(184, 134, 11, 0.04);
+      }
+
+      /* CONFIG FORM */
+      .config-wrap {
+        max-width: 480px;
+        margin: 0 auto;
+      }
+      .config-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .field-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+      }
+      .field-input {
+        width: 100%;
+        height: 44px;
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        padding: 0 14px;
+        border-radius: var(--radius);
+        caret-color: var(--color-accent);
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .field-input::placeholder {
+        color: var(--color-muted);
+        opacity: 0.55;
+      }
+      .field-input:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 1px rgba(204, 0, 0, 0.2);
+      }
+      .save-btn {
+        width: 100%;
+        height: 48px;
+        background: transparent;
+        border: 1px solid var(--color-accent);
+        color: var(--color-text);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          box-shadow 0.2s;
+      }
+      .save-btn:hover {
+        background: var(--color-accent);
+        color: #fff;
+        box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+      }
+      .config-divider {
+        height: 1px;
+        background: var(--color-border);
+        margin: 8px 0;
+      }
+      .danger-zone-label {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        margin-bottom: 14px;
+      }
+      .danger-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .danger-btn-outline {
+        width: 100%;
+        height: 40px;
+        background: transparent;
+        border: 1px solid var(--color-border);
+        color: var(--color-muted);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .danger-btn-outline:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+      .danger-link {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--color-accent-dim);
+        cursor: pointer;
+        text-align: center;
+        padding: 8px;
+        transition: color 0.2s;
+      }
+      .danger-link:hover {
+        color: var(--color-accent);
+      }
+
+      /* APP FOOTER */
+      .app-footer {
+        border-top: 1px dashed var(--color-accent);
+        background: var(--color-bg);
+        padding: 40px 48px;
+      }
+      .footer-inner {
+        max-width: 1440px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: center;
+        gap: 24px;
+      }
+      .footer-logo {
+        font-family: var(--font-display);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--color-text);
+        margin-bottom: 6px;
+      }
+      .footer-tagline {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        color: var(--color-muted);
+        font-style: italic;
+      }
+      .footer-nav {
+        display: flex;
+        gap: 24px;
+        justify-content: center;
+      }
+      .footer-nav a {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        transition: color 0.2s;
+      }
+      .footer-nav a:hover {
+        color: var(--color-text);
+      }
+      .footer-stamp {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        text-align: right;
+        opacity: 0.5;
+      }
+
+      /* MOBILE */
+      @media (max-width: 768px) {
+        .app-header {
+          padding: 0 20px;
+        }
+        .header-nav,
+        .header-actions {
+          display: none;
+        }
+        .hamburger {
+          display: flex;
+        }
+        .dossier-header-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 24px 20px 0;
+          gap: 24px;
+        }
+        .agent-identity {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 16px;
+        }
+        .agent-username {
+          font-size: 22px;
+        }
+        .agent-stats {
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          width: 100%;
+        }
+        .stat-value {
+          font-size: 18px;
+        }
+        .content-area {
+          padding: 24px 20px 60px;
+        }
+        .cards-grid {
+          grid-template-columns: 1fr;
+        }
+        .history-header {
+          display: none;
+        }
+        .history-row {
+          grid-template-columns: 100px 1fr;
+          gap: 0;
+        }
+        .history-date,
+        .history-cat {
+          display: none;
+        }
+        .footer-inner {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+        .footer-nav {
+          justify-content: flex-start;
+        }
+        .footer-stamp {
+          text-align: left;
+        }
+        .app-footer {
+          padding: 28px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="film-grain"></div>
+    <div class="scanline-overlay"></div>
+
+    <!-- APP HEADER -->
+    <header class="app-header" id="app-header">
+      <div class="header-logo" id="logo-text">
+        OB<span class="logo-u-wrap"><span class="logo-red-dot"></span>S</span
+        >CURA
+      </div>
+      <nav class="header-nav">
+        <a href="obscura-explorar.html">EXPLORAR</a>
+        <a href="obscura-mapa.html">MAPA</a>
+        <a href="obscura-cronologia.html">CRONOLOGÍA</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <circle cx="6.5" cy="6.5" r="4" />
+            <path d="M11 11l3 3" />
+          </svg>
+          BUSCAR
+          <span class="search-kbd">⌘K</span>
+        </button>
+        <button class="login-btn">LOGIN</button>
+      </div>
+      <button class="hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+    </header>
+
+    <div class="page-wrapper">
+      <!-- DOSSIER HEADER -->
+      <div class="dossier-header">
+        <div class="dossier-header-bg"></div>
+        <div class="dossier-header-grid"></div>
+        <div class="dossier-header-scanlines"></div>
+        <div class="dossier-header-inner">
+          <!-- LEFT: Identity -->
+          <div class="agent-identity">
+            <div class="agent-avatar">AG</div>
+            <div class="agent-info">
+              <div class="agent-username">AGENTE_OSCURO</div>
+              <div class="agent-badges">
+                <span class="role-badge">INVESTIGADOR</span>
+                <span class="agent-points">2.847 PUNTOS</span>
+              </div>
+              <div class="agent-since">AGENTE DESDE OCT 2023</div>
+            </div>
+          </div>
+          <!-- RIGHT: Stats -->
+          <div class="agent-stats">
+            <div class="stat-item">
+              <div class="stat-label">EXPEDIENTES GUARDADOS</div>
+              <div class="stat-value">12</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">CASOS CONSULTADOS</div>
+              <div class="stat-value">34</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">AGENTE DESDE</div>
+              <div
+                class="stat-value"
+                style="font-size: 16px; letter-spacing: 0.04em"
+              >
+                OCT 2023
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">NIVEL DE ACCESO</div>
+              <div
+                class="stat-value"
+                style="
+                  font-size: 14px;
+                  letter-spacing: 0.06em;
+                  color: var(--color-classified);
+                "
+              >
+                INVESTIGADOR
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- TAB BAR -->
+        <div class="tab-bar-wrap">
+          <div class="tab-bar">
+            <button class="tab-btn active" data-tab="expedientes">
+              EXPEDIENTES
+            </button>
+            <button class="tab-btn" data-tab="historial">HISTORIAL</button>
+            <button class="tab-btn" data-tab="configuracion">
+              CONFIGURACIÓN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENT AREA -->
+      <div class="content-area">
+        <!-- TAB: EXPEDIENTES -->
+        <div class="tab-content active" id="tab-expedientes">
+          <div class="section-label-row">
+            <div class="section-label">// EXPEDIENTES GUARDADOS</div>
+          </div>
+          <div class="results-count">12 EXPEDIENTES EN ARCHIVO PERSONAL</div>
+          <div class="cards-grid">
+            <div class="mystery-card">
+              <div class="card-image img-dyatlov">
+                <div class="card-badge badge-clasificado">CLASIFICADO</div>
+              </div>
+              <div class="card-body">
+                <div class="card-id">OBX-1959-0012</div>
+                <div class="card-title">La Masacre del Paso Dyatlov</div>
+                <div class="card-meta">
+                  🇷🇺 RUSIA · 1959 · FENÓMENOS INEXPLICABLES
+                </div>
+              </div>
+              <div class="card-bottom-border"></div>
+            </div>
+
+            <div class="mystery-card">
+              <div class="card-image img-mh370">
+                <div class="card-badge badge-sin-resolver">SIN RESOLVER</div>
+              </div>
+              <div class="card-body">
+                <div class="card-id">OBX-2014-0033</div>
+                <div class="card-title">Desaparición del Vuelo MH370</div>
+                <div class="card-meta">🇲🇾 MALASIA · 2014 · DESAPARICIÓN</div>
+              </div>
+              <div class="card-bottom-border"></div>
+            </div>
+
+            <div class="mystery-card">
+              <div class="card-image img-zodiac">
+                <div class="card-badge badge-sin-resolver">SIN RESOLVER</div>
+              </div>
+              <div class="card-body">
+                <div class="card-id">OBX-1968-0007</div>
+                <div class="card-title">El Asesino del Zodiaco</div>
+                <div class="card-meta">🇺🇸 EE.UU. · 1968 · CRIMEN</div>
+              </div>
+              <div class="card-bottom-border"></div>
+            </div>
+
+            <div class="mystery-card">
+              <div class="card-image img-voynich">
+                <div class="card-badge badge-clasificado">CLASIFICADO</div>
+              </div>
+              <div class="card-body">
+                <div class="card-id">OBX-1912-0001</div>
+                <div class="card-title">El Manuscrito Voynich</div>
+                <div class="card-meta">🇪🇺 EUROPA · 1912 · OCULTISMO</div>
+              </div>
+              <div class="card-bottom-border"></div>
+            </div>
+
+            <div class="mystery-card">
+              <div class="card-image img-mkul">
+                <div class="card-badge badge-archivado">ARCHIVADO</div>
+              </div>
+              <div class="card-body">
+                <div class="card-id">OBX-1953-0019</div>
+                <div class="card-title">Experimento MK-Ultra</div>
+                <div class="card-meta">🇺🇸 EE.UU. · 1953 · CONSPIRACIÓN</div>
+              </div>
+              <div class="card-bottom-border"></div>
+            </div>
+
+            <div class="mystery-card">
+              <div class="card-image img-belmez">
+                <div class="card-badge badge-sin-resolver">SIN RESOLVER</div>
+              </div>
+              <div class="card-body">
+                <div class="card-id">OBX-1971-0024</div>
+                <div class="card-title">Las Caras de Bélmez</div>
+                <div class="card-meta">🇪🇸 ESPAÑA · 1971 · PARANORMAL</div>
+              </div>
+              <div class="card-bottom-border"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: HISTORIAL -->
+        <div class="tab-content" id="tab-historial">
+          <div class="section-label-row">
+            <div class="section-label">// REGISTRO DE CONSULTAS</div>
+          </div>
+          <div class="results-count" style="margin-bottom: 24px">
+            34 CASOS CONSULTADOS RECIENTEMENTE
+          </div>
+          <div class="history-table">
+            <div class="history-header">
+              <span>ID CASO</span>
+              <span>TÍTULO</span>
+              <span>CONSULTADO</span>
+              <span>CATEGORÍA</span>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-1959-0012</div>
+              <div class="history-title">La Masacre del Paso Dyatlov</div>
+              <div class="history-date">15 JUN 2026</div>
+              <div class="history-cat cat-paranormal">PARANORMAL</div>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-2014-0033</div>
+              <div class="history-title">Desaparición del Vuelo MH370</div>
+              <div class="history-date">14 JUN 2026</div>
+              <div class="history-cat cat-desaparicion">DESAPARICIÓN</div>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-1947-0004</div>
+              <div class="history-title">Incidente de Roswell</div>
+              <div class="history-date">13 JUN 2026</div>
+              <div class="history-cat cat-paranormal">PARANORMAL</div>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-1968-0007</div>
+              <div class="history-title">El Asesino del Zodiaco</div>
+              <div class="history-date">12 JUN 2026</div>
+              <div class="history-cat cat-crimen">CRIMEN</div>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-1953-0019</div>
+              <div class="history-title">Experimento MK-Ultra</div>
+              <div class="history-date">11 JUN 2026</div>
+              <div class="history-cat cat-conspiracion">CONSPIRACIÓN</div>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-1912-0001</div>
+              <div class="history-title">El Manuscrito Voynich</div>
+              <div class="history-date">10 JUN 2026</div>
+              <div class="history-cat cat-paranormal">OCULTISMO</div>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-1971-0024</div>
+              <div class="history-title">Las Caras de Bélmez</div>
+              <div class="history-date">09 JUN 2026</div>
+              <div class="history-cat cat-paranormal">PARANORMAL</div>
+            </div>
+            <div class="history-row">
+              <div class="history-case-id">OBX-2001-0055</div>
+              <div class="history-title">El Triángulo de las Bermudas</div>
+              <div class="history-date">08 JUN 2026</div>
+              <div class="history-cat cat-desaparicion">DESAPARICIÓN</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: CONFIGURACIÓN -->
+        <div class="tab-content" id="tab-configuracion">
+          <div class="section-label-row">
+            <div class="section-label">// CONFIGURACIÓN DE AGENTE</div>
+          </div>
+          <div class="results-count" style="margin-bottom: 32px">
+            MODIFICAR CREDENCIALES DE ACCESO
+          </div>
+          <div class="config-wrap">
+            <div class="config-form">
+              <div class="field-group">
+                <label class="field-label">NOMBRE DE AGENTE</label>
+                <input class="field-input" type="text" value="AGENTE_OSCURO" />
+              </div>
+              <div class="field-group">
+                <label class="field-label">IDENTIFICADOR</label>
+                <input
+                  class="field-input"
+                  type="email"
+                  value="agente@obscura.es"
+                />
+              </div>
+              <div class="field-group">
+                <label class="field-label">NUEVO CÓDIGO DE ACCESO</label>
+                <input
+                  class="field-input"
+                  type="password"
+                  placeholder="••••••••••"
+                />
+              </div>
+              <div class="field-group">
+                <label class="field-label">CONFIRMAR CÓDIGO</label>
+                <input
+                  class="field-input"
+                  type="password"
+                  placeholder="••••••••••"
+                />
+              </div>
+              <button class="save-btn">GUARDAR CAMBIOS →</button>
+              <div class="config-divider"></div>
+              <div class="danger-zone-label">// ZONA RESTRINGIDA</div>
+              <div class="danger-btns">
+                <button class="danger-btn-outline">CERRAR SESIÓN</button>
+                <div class="danger-link">ELIMINAR CUENTA PERMANENTEMENTE →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /content-area -->
+
+      <!-- APP FOOTER -->
+      <footer class="app-footer">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-logo">OBSCURA</div>
+            <div class="footer-tagline">
+              Algunos archivos no deberían existir.
+            </div>
+          </div>
+          <nav class="footer-nav">
+            <a href="obscura-explorar.html">EXPLORAR</a>
+            <a href="obscura-mapa.html">MAPA</a>
+            <a href="obscura-cronologia.html">CRONOLOGÍA</a>
+          </nav>
+          <div class="footer-stamp">CLASIFICADO — USO INTERNO</div>
+        </div>
+      </footer>
+    </div>
+    <!-- /page-wrapper -->
+
+    <script>
+      // Header scroll
+      const header = document.getElementById("app-header");
+      window.addEventListener("scroll", () => {
+        header.classList.toggle("scrolled", window.scrollY > 5);
+      });
+
+      // decryptTitle
+      function decryptTitle(el) {
+        const GLYPHS = "█▓▒░╬╫╩╦╣╠═╚╗▀▄■□×+@#$%!?~^";
+        const text = el.textContent;
+        el.style.opacity = "1";
+        const chars = text.split("");
+        const spans = chars.map((ch) => {
+          const s = document.createElement("span");
+          s.style.display = "inline-block";
+          s.textContent =
+            ch === " "
+              ? " "
+              : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+          return { span: s, real: ch, isSpace: ch === " " };
+        });
+        el.innerHTML = "";
+        spans.forEach((o) => el.appendChild(o.span));
+        const TOTAL = 1200;
+        const START = Date.now();
+        const locked = {};
+        function scramble() {
+          const elapsed = Date.now() - START;
+          spans.forEach((o, i) => {
+            if (o.isSpace) return;
+            const lockAt =
+              (i / Math.max(spans.length - 1, 1)) * TOTAL * 0.93 + 80;
+            if (elapsed >= lockAt) {
+              if (!locked[i]) {
+                locked[i] = true;
+                o.span.textContent = o.real;
+              }
+            } else {
+              o.span.textContent =
+                GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+            }
+          });
+          if (elapsed < TOTAL + 120) requestAnimationFrame(scramble);
+          else {
+            spans.forEach((o) => {
+              o.span.textContent = o.real;
+            });
+            el.classList.add("flicker-anim");
+          }
+        }
+        requestAnimationFrame(scramble);
+      }
+
+      // Apply decrypt to logo
+      setTimeout(() => {
+        const logo = document.getElementById("logo-text");
+        if (logo) decryptTitle(logo);
+      }, 200);
+
+      // Tab switching
+      const tabBtns = document.querySelectorAll(".tab-btn");
+      const tabContents = document.querySelectorAll(".tab-content");
+      tabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.dataset.tab;
+          tabBtns.forEach((b) => b.classList.remove("active"));
+          tabContents.forEach((c) => c.classList.remove("active"));
+          btn.classList.add("active");
+          const el = document.getElementById("tab-" + target);
+          if (el) el.classList.add("active");
+        });
+      });
+    </script>
+  </body>
+</html>
