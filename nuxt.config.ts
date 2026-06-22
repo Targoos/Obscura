@@ -32,7 +32,7 @@ export default defineNuxtConfig({
     "@nuxt/fonts",
     "@nuxt/image",
     "@vueuse/nuxt",
-    // '@nuxtjs/supabase', // TODO: habilitar cuando tengas credenciales
+    "@nuxtjs/supabase",
     "@nuxt/eslint",
   ],
 
@@ -63,9 +63,12 @@ export default defineNuxtConfig({
     format: ["webp"],
   },
 
-  // supabase: {
-  //   redirect: false,
-  // },
+  supabase: {
+    url: process.env.NUXT_PUBLIC_SUPABASE_URL,
+    key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    redirect: false,
+  },
 
   routeRules: {
     "/": { prerender: true },
