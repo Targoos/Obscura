@@ -2,23 +2,22 @@
 definePageMeta({ middleware: ["guest"], layout: "auth" });
 useHead({ title: "Iniciar Sesión — Obscura" });
 
-const loading = ref(false);
-const error = ref<string | undefined>();
+const { signIn, loading, error } = useAuth();
 
-async function onSubmit(_payload: { email: string; password: string }) {
-  loading.value = true;
-  error.value = undefined;
+async function onSubmit(payload: { email: string; password: string }) {
   try {
-    // TODO: useAuth().signIn(payload)
-    await new Promise((r) => setTimeout(r, 800));
+    await signIn(payload.email, payload.password);
+    await navigateTo("/");
   } catch {
-    error.value = "ACCESO DENEGADO — CREDENCIALES INVÁLIDAS";
-  } finally {
-    loading.value = false;
+    // error reactivo expuesto por useAuth ya contiene el mensaje
   }
 }
 </script>
 
 <template>
-  <AuthLoginForm :loading="loading" :error="error" @submit="onSubmit" />
+  <AuthLoginForm
+    :loading="loading"
+    :error="error ?? undefined"
+    @submit="onSubmit"
+  />
 </template>

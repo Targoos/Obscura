@@ -2,6 +2,16 @@
 const { y } = useWindowScroll();
 const isScrolled = computed(() => y.value > 8);
 
+const user = useSupabaseUser();
+const isAuthenticated = computed(() => !!user.value);
+
+const { signOut } = useAuth();
+
+async function handleSignOut() {
+  await signOut();
+  await navigateTo("/login");
+}
+
 const mobileNavOpen = ref(false);
 const searchBtnEl = ref<HTMLButtonElement | null>(null);
 
@@ -65,7 +75,25 @@ useEventListener("keydown", (e: KeyboardEvent) => {
         <span class="search-kbd" aria-hidden="true">⌘K</span>
       </button>
 
-      <NuxtLink to="/login" class="login-btn text-mono-data"> LOGIN </NuxtLink>
+      <NuxtLink
+        v-if="!isAuthenticated"
+        to="/login"
+        class="login-btn text-mono-data"
+      >
+        LOGIN
+      </NuxtLink>
+      <template v-else>
+        <NuxtLink to="/perfil" class="login-btn text-mono-data">
+          PERFIL
+        </NuxtLink>
+        <button
+          type="button"
+          class="logout-btn text-mono-data"
+          @click="handleSignOut"
+        >
+          SALIR
+        </button>
+      </template>
 
       <button
         type="button"
@@ -249,6 +277,27 @@ useEventListener("keydown", (e: KeyboardEvent) => {
   background: var(--color-accent);
   color: #fff;
   box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+}
+
+.logout-btn {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.logout-btn:hover {
+  border-color: var(--color-muted);
+  color: var(--color-text);
 }
 
 .hamburger {

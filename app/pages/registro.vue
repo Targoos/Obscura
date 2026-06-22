@@ -2,28 +2,27 @@
 definePageMeta({ middleware: ["guest"], layout: "auth" });
 useHead({ title: "Crear Cuenta — Obscura" });
 
-const loading = ref(false);
-const error = ref<string | undefined>();
+const { signUp, loading, error } = useAuth();
 
-async function onSubmit(_payload: {
+async function onSubmit(payload: {
   username: string;
   email: string;
   password: string;
   confirmPassword: string;
 }) {
-  loading.value = true;
-  error.value = undefined;
   try {
-    // TODO: useAuth().signUp(payload)
-    await new Promise((r) => setTimeout(r, 800));
+    await signUp(payload.email, payload.password, payload.username);
+    await navigateTo("/login?registered=true");
   } catch {
-    error.value = "ERROR AL CREAR CREDENCIALES — INTENTALO DE NUEVO";
-  } finally {
-    loading.value = false;
+    // error reactivo expuesto por useAuth ya contiene el mensaje
   }
 }
 </script>
 
 <template>
-  <AuthRegisterForm :loading="loading" :error="error" @submit="onSubmit" />
+  <AuthRegisterForm
+    :loading="loading"
+    :error="error ?? undefined"
+    @submit="onSubmit"
+  />
 </template>
