@@ -3,6 +3,8 @@ export type BadgeVariant =
   | "abierto"
   | "archivado"
   | "clasificado"
+  | "extremo"
+  | "perturbador"
   | "sin-resolver";
 
 const props = defineProps<{ variant: BadgeVariant }>();
@@ -11,6 +13,8 @@ const config: Record<BadgeVariant, string> = {
   abierto: "CASO ABIERTO",
   archivado: "ARCHIVADO",
   clasificado: "CLASIFICADO",
+  extremo: "EXTREMO",
+  perturbador: "PERTURBADOR",
   "sin-resolver": "SIN RESOLVER",
 };
 </script>
@@ -50,6 +54,18 @@ const config: Record<BadgeVariant, string> = {
   color: var(--color-classified);
   border-color: rgba(255, 102, 0, 0.5);
   background: rgba(255, 102, 0, 0.06);
+}
+
+.badge--extremo {
+  color: var(--color-danger);
+  border-color: rgba(255, 34, 34, 0.5);
+  background: rgba(255, 34, 34, 0.06);
+}
+
+.badge--perturbador {
+  color: var(--color-warning);
+  border-color: rgba(184, 134, 11, 0.55);
+  background: rgba(184, 134, 11, 0.07);
 }
 
 .badge--sin-resolver {

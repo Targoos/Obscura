@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Mystery } from "~/types/mystery";
 
-type BadgeVariant = "abierto" | "archivado" | "clasificado" | "sin-resolver";
+import type { BadgeVariant } from "~/components/ui/StatusBadge.vue";
 
 const props = defineProps<{ mystery: Mystery }>();
 
@@ -14,10 +14,17 @@ const bgIndex = computed(() => {
 });
 
 const badgeVariant = computed((): BadgeVariant => {
-  if (props.mystery.classification_level === "classified") return "clasificado";
   if (props.mystery.status === "archived") return "archivado";
-  if (props.mystery.status === "published") return "abierto";
-  return "sin-resolver";
+  switch (props.mystery.classification_level) {
+    case "classified":
+      return "clasificado";
+    case "extreme":
+      return "extremo";
+    case "disturbing":
+      return "perturbador";
+    default:
+      return "abierto";
+  }
 });
 </script>
 
@@ -28,7 +35,22 @@ const badgeVariant = computed((): BadgeVariant => {
     :aria-label="mystery.title"
   >
     <div class="card-image">
-      <div :class="['card-img-bg', `card-bg--${bgIndex}`]" aria-hidden="true" />
+      <div
+        :class="[
+          'card-img-bg',
+          { [`card-bg--${bgIndex}`]: !mystery.image_url },
+        ]"
+        :style="
+          mystery.image_url
+            ? {
+                backgroundImage: `url(${mystery.image_url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : undefined
+        "
+        aria-hidden="true"
+      />
       <div class="card-img-vignette" aria-hidden="true" />
       <StatusBadge :variant="badgeVariant" class="card-badge-pos" />
     </div>

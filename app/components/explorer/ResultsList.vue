@@ -8,10 +8,17 @@ defineProps<{
 }>();
 
 function getBadgeVariant(m: Mystery): BadgeVariant {
-  if (m.classification_level === "classified") return "clasificado";
   if (m.status === "archived") return "archivado";
-  if (m.status === "published") return "abierto";
-  return "sin-resolver";
+  switch (m.classification_level) {
+    case "classified":
+      return "clasificado";
+    case "extreme":
+      return "extremo";
+    case "disturbing":
+      return "perturbador";
+    default:
+      return "abierto";
+  }
 }
 
 function getDotClass(m: Mystery): string {
@@ -139,6 +146,12 @@ function getDotClass(m: Mystery): string {
 }
 .dot--clasificado {
   background: var(--color-classified);
+}
+.dot--extremo {
+  background: var(--color-danger);
+}
+.dot--perturbador {
+  background: var(--color-warning);
 }
 .dot--sin-resolver {
   background: var(--color-accent);
