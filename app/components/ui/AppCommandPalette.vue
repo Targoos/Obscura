@@ -9,7 +9,7 @@ defineShortcuts({
 </script>
 
 <template>
-  <UModal v-model:open="open" :ui="{ width: 'max-w-xl' }">
+  <UModal v-model:open="open" class="max-w-xl">
     <!-- TODO: search input + results list -->
   </UModal>
 </template>
