@@ -1,5 +1,5 @@
 import type { Database } from "~/types/supabase";
-import type { Mystery, MysteryDetail } from "~/types/mystery";
+import type { Mystery, MysteryDetail, Category } from "~/types/mystery";
 
 type SortField = "created_at" | "views_count" | "rating_avg" | "year_occurred";
 
@@ -134,6 +134,50 @@ export function useMysteries() {
     return (data ?? []) as unknown as Mystery[];
   }
 
+  async function fetchFeatured(
+    type: "day" | "hero" | "carousel",
+  ): Promise<Mystery[]> {
+    const { data, error: queryError } = await supabase
+      .from("featured_content")
+      .select(`position, mystery:mysteries(${LIST_SELECT})`)
+      .eq("type", type)
+      .eq("active", true)
+      .order("position", { ascending: true });
+
+    if (queryError) {
+      error.value = queryError.message;
+      return [];
+    }
+
+    return (data ?? [])
+      .map((row) => row.mystery)
+      .filter(Boolean) as unknown as Mystery[];
+  }
+
+  async function fetchCategories(): Promise<(Category & { count: number })[]> {
+    const { data, error: queryError } = await supabase
+      .from("categories")
+      .select("*, mysteries(count)")
+      .order("name", { ascending: true });
+
+    if (queryError) {
+      error.value = queryError.message;
+      return [];
+    }
+
+    return (data ?? []).map((cat) => {
+      const raw = cat as unknown as Record<string, unknown>;
+      const mysteriesArr = raw.mysteries as
+        | Array<{ count: number }>
+        | undefined;
+      const count =
+        Array.isArray(mysteriesArr) && mysteriesArr.length > 0
+          ? (mysteriesArr[0]?.count ?? 0)
+          : 0;
+      return { ...(cat as unknown as Category), count };
+    });
+  }
+
   return {
     mysteries,
     total,
@@ -142,6 +186,8 @@ export function useMysteries() {
     fetchAll,
     fetchBySlug,
     fetchRelated,
+    fetchFeatured,
+    fetchCategories,
   };
 }
 

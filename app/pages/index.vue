@@ -1,14 +1,33 @@
 <script setup lang="ts">
-import type { Mystery } from "~/types/mystery";
-
 useHead({ title: "Obscura — Algunos archivos no deberían existir." });
+
+const { fetchFeatured, fetchAll, fetchCategories } = useMysteries();
+
+// ── Real data ─────────────────────────────────────────────────
+const { data: dayItems } = await useAsyncData("home-day", () =>
+  fetchFeatured("day"),
+);
+const { data: carouselItems } = await useAsyncData("home-carousel", () =>
+  fetchFeatured("carousel"),
+);
+const { data: latestResult } = await useAsyncData("home-latest", () =>
+  fetchAll({ sortBy: "views_count", order: "desc", perPage: 6 }),
+);
+const { data: categoriesData } = await useAsyncData("home-categories", () =>
+  fetchCategories(),
+);
+
+const caseOfDay = computed(() => dayItems.value?.[0] ?? null);
+const featuredCases = computed(() => carouselItems.value ?? []);
+const latestCases = computed(() => latestResult.value?.data ?? []);
+const categories = computed(() => categoriesData.value ?? []);
 
 // ── Hero decrypt animation ───────────────────────────────────
 const heroTitleEl = ref<HTMLHeadingElement | null>(null);
 const GLYPHS = "█▓▒░╬╫╪╩╦╣╠═╚╔╝╗▀▄■□▪▫◆◇◈◉○●×+";
 
-function fadeDecrypt(el: HTMLElement, duration: number) {
-  const source = "LA HABITACIÓN\nSIN RETORNO";
+function fadeDecrypt(el: HTMLElement, text: string, duration: number) {
+  const source = text.toUpperCase();
   const chars = source.split("");
   const total = chars.length;
   const revealed = new Array<boolean>(total).fill(false);
@@ -28,7 +47,7 @@ function fadeDecrypt(el: HTMLElement, duration: number) {
         return;
       }
       if (c === " ") {
-        html += " ";
+        html += " ";
         return;
       }
       html += revealed[i]
@@ -40,7 +59,7 @@ function fadeDecrypt(el: HTMLElement, duration: number) {
       requestAnimationFrame(tick);
     } else {
       el.innerHTML = chars
-        .map((c) => (c === "\n" ? "<br>" : c === " " ? " " : c))
+        .map((c) => (c === "\n" ? "<br>" : c === " " ? " " : c))
         .join("");
       el.classList.add("animate-flicker");
     }
@@ -48,9 +67,43 @@ function fadeDecrypt(el: HTMLElement, duration: number) {
   requestAnimationFrame(tick);
 }
 
+const heroDecryptTitle = computed(() => {
+  if (!caseOfDay.value) return "";
+  const title = caseOfDay.value.title.toUpperCase();
+  const words = title.split(" ");
+  const mid = Math.ceil(words.length / 2);
+  return words.slice(0, mid).join(" ") + "\n" + words.slice(mid).join(" ");
+});
+
+const heroClassificationLabel = computed(() => {
+  const level = caseOfDay.value?.classification_level;
+  if (level === "classified") return "CLASIFICADO";
+  if (level === "extreme") return "EXTREMO";
+  if (level === "disturbing") return "PERTURBADOR";
+  return "CLASIFICADO";
+});
+
+const heroCaseId = computed(() => {
+  if (!caseOfDay.value) return "";
+  const year = caseOfDay.value.year_occurred ?? new Date().getFullYear();
+  const idSuffix = caseOfDay.value.id.slice(-4).toUpperCase();
+  return `OBX-${year}-${idSuffix}`;
+});
+
+const heroViews = computed(() => {
+  const v = caseOfDay.value?.views_count ?? 0;
+  return v.toLocaleString("es-ES") + " VISTAS";
+});
+
+const heroYear = computed(() => caseOfDay.value?.year_occurred ?? "");
+const heroCountry = computed(() => caseOfDay.value?.country ?? null);
+const heroCategory = computed(() => caseOfDay.value?.category ?? null);
+
 onMounted(() => {
   setTimeout(() => {
-    if (heroTitleEl.value) fadeDecrypt(heroTitleEl.value, 2200);
+    if (heroTitleEl.value && heroDecryptTitle.value) {
+      fadeDecrypt(heroTitleEl.value, heroDecryptTitle.value, 2200);
+    }
   }, 1100);
 
   // Scroll-triggered card reveal
@@ -72,184 +125,6 @@ onMounted(() => {
     revealEls.forEach((el) => el.classList.add("visible"));
   }
 });
-
-// ── Mock data ────────────────────────────────────────────────
-function mkMystery(o: {
-  id: string;
-  slug: string;
-  title: string;
-  status: Mystery["status"];
-  classification_level: Mystery["classification_level"];
-  year_occurred: number;
-  countryName: string;
-  countryFlag: string;
-  countryCode: string;
-}): Mystery {
-  return {
-    id: o.id,
-    slug: o.slug,
-    title: o.title,
-    summary: "",
-    description: "",
-    status: o.status,
-    classification_level: o.classification_level,
-    image_url: null,
-    latitude: null,
-    longitude: null,
-    year_occurred: o.year_occurred,
-    views_count: 0,
-    rating_avg: 0,
-    rating_count: 0,
-    category_id: "1",
-    country_id: o.id,
-    created_at: "",
-    updated_at: "",
-    published_at: null,
-    created_by: "",
-    country: {
-      id: o.id,
-      name: o.countryName,
-      code: o.countryCode,
-      flag_emoji: o.countryFlag,
-      continent: null,
-      created_at: "",
-    },
-  };
-}
-
-const featuredCases: Mystery[] = [
-  mkMystery({
-    id: "1",
-    slug: "el-experimento-filadelfia",
-    title: "El Experimento Filadelfia",
-    status: "archived",
-    classification_level: "classified",
-    year_occurred: 1943,
-    countryName: "EE.UU.",
-    countryFlag: "🇺🇸",
-    countryCode: "US",
-  }),
-  mkMystery({
-    id: "2",
-    slug: "la-isla-poveglia",
-    title: "La Isla Poveglia",
-    status: "draft",
-    classification_level: "extreme",
-    year_occurred: 1922,
-    countryName: "Italia",
-    countryFlag: "🇮🇹",
-    countryCode: "IT",
-  }),
-  mkMystery({
-    id: "3",
-    slug: "la-masacre-de-jonestown",
-    title: "La Masacre de Jonestown",
-    status: "archived",
-    classification_level: "disturbing",
-    year_occurred: 1978,
-    countryName: "Guyana",
-    countryFlag: "🇬🇾",
-    countryCode: "GY",
-  }),
-  mkMystery({
-    id: "4",
-    slug: "el-manuscrito-voynich",
-    title: "El Manuscrito Voynich",
-    status: "draft",
-    classification_level: "extreme",
-    year_occurred: 1404,
-    countryName: "Desconocido",
-    countryFlag: "🌍",
-    countryCode: "XX",
-  }),
-];
-
-const latestCases: Mystery[] = [
-  mkMystery({
-    id: "5",
-    slug: "la-posesion-de-anneliese-michel",
-    title: "La Posesión de Anneliese Michel",
-    status: "archived",
-    classification_level: "disturbing",
-    year_occurred: 1976,
-    countryName: "Alemania",
-    countryFlag: "🇩🇪",
-    countryCode: "DE",
-  }),
-  mkMystery({
-    id: "6",
-    slug: "la-desaparicion-del-mh370",
-    title: "La Desaparición del MH370",
-    status: "draft",
-    classification_level: "extreme",
-    year_occurred: 2014,
-    countryName: "Malasia",
-    countryFlag: "🇲🇾",
-    countryCode: "MY",
-  }),
-  mkMystery({
-    id: "7",
-    slug: "los-circulos-de-wiltshire",
-    title: "Los Círculos de Wiltshire",
-    status: "published",
-    classification_level: "disturbing",
-    year_occurred: 2022,
-    countryName: "Reino Unido",
-    countryFlag: "🇬🇧",
-    countryCode: "GB",
-  }),
-  mkMystery({
-    id: "8",
-    slug: "la-orden-del-temple-solar",
-    title: "La Orden del Temple Solar",
-    status: "archived",
-    classification_level: "classified",
-    year_occurred: 1994,
-    countryName: "Suiza",
-    countryFlag: "🇨🇭",
-    countryCode: "CH",
-  }),
-  mkMystery({
-    id: "9",
-    slug: "los-sonidos-de-taos",
-    title: "Los Sonidos de Taos",
-    status: "draft",
-    classification_level: "extreme",
-    year_occurred: 1991,
-    countryName: "EE.UU.",
-    countryFlag: "🇺🇸",
-    countryCode: "US",
-  }),
-  mkMystery({
-    id: "10",
-    slug: "el-proyecto-mk-ultra",
-    title: "El Proyecto MK-Ultra",
-    status: "published",
-    classification_level: "classified",
-    year_occurred: 1953,
-    countryName: "EE.UU.",
-    countryFlag: "🇺🇸",
-    countryCode: "US",
-  }),
-];
-
-interface MockCategory {
-  name: string;
-  count: number;
-}
-
-const categories: MockCategory[] = [
-  { name: "OCULTISMO", count: 247 },
-  { name: "CRÍMENES SIN RESOLVER", count: 412 },
-  { name: "FENÓMENOS PARANORMALES", count: 189 },
-  { name: "DESAPARICIONES", count: 334 },
-  { name: "CULTOS Y SECTAS", count: 98 },
-  { name: "ENTIDADES", count: 156 },
-  { name: "ARCHIVOS CLASIFICADOS", count: 61 },
-  { name: "LUGARES MALDITOS", count: 203 },
-  { name: "RITUALES", count: 77 },
-  { name: "AVISTAMIENTOS", count: 291 },
-];
 </script>
 
 <template>
@@ -266,40 +141,48 @@ const categories: MockCategory[] = [
       </div>
 
       <div class="hero-content">
-        <div class="hero-badge" role="status">CLASIFICADO</div>
+        <div class="hero-badge" role="status">
+          {{ heroClassificationLabel }}
+        </div>
 
         <h1
           ref="heroTitleEl"
           class="hero-title text-mystery-title"
-          aria-label="La Habitación Sin Retorno"
+          :aria-label="caseOfDay?.title"
         >
-          LA HABITACIÓN<br />SIN RETORNO
+          {{ caseOfDay?.title?.toUpperCase() }}
         </h1>
 
         <p class="hero-subtitle">
-          Testigos afirman haber escuchado susurros en lenguas extintas durante
-          tres noches consecutivas en el Hotel Excelsior, Turín, 1987.
+          {{ caseOfDay?.summary }}
         </p>
 
-        <NuxtLink to="/caso/obx-2024-0091" class="hero-cta text-mono-data">
+        <NuxtLink
+          v-if="caseOfDay"
+          :to="`/caso/${caseOfDay.slug}`"
+          class="hero-cta text-mono-data"
+        >
           ABRIR EXPEDIENTE <span aria-hidden="true">→</span>
         </NuxtLink>
       </div>
 
       <div class="hero-case-id text-mono-data" aria-hidden="true">
-        OBX-2024-0091
+        {{ heroCaseId }}
       </div>
 
       <div class="hero-meta text-mono-data" role="list">
-        <div class="hero-meta-item" role="listitem">1987</div>
+        <div class="hero-meta-item" role="listitem">{{ heroYear }}</div>
         <div class="hero-meta-sep" aria-hidden="true" />
-        <div class="hero-meta-item" role="listitem">
-          <span aria-hidden="true">🇮🇹</span> ITALIA
+        <div v-if="heroCountry" class="hero-meta-item" role="listitem">
+          <span aria-hidden="true">{{ heroCountry.flag_emoji }}</span>
+          {{ heroCountry.name.toUpperCase() }}
         </div>
         <div class="hero-meta-sep" aria-hidden="true" />
-        <div class="hero-meta-item" role="listitem">FENÓMENOS PARANORMALES</div>
+        <div v-if="heroCategory" class="hero-meta-item" role="listitem">
+          {{ heroCategory.name.toUpperCase() }}
+        </div>
         <div class="hero-meta-sep" aria-hidden="true" />
-        <div class="hero-meta-item" role="listitem">12.847 VISTAS</div>
+        <div class="hero-meta-item" role="listitem">{{ heroViews }}</div>
       </div>
     </section>
 
@@ -322,17 +205,19 @@ const categories: MockCategory[] = [
     <section class="categories-section" aria-labelledby="sec-categorias">
       <SectionLabel id="sec-categorias" label="// 04 — CATEGORÍAS" />
       <div class="categories-grid" role="list">
-        <button
+        <NuxtLink
           v-for="cat in categories"
-          :key="cat.name"
-          type="button"
+          :key="cat.slug"
+          :to="`/explorar?categoria=${cat.slug}`"
           class="cat-pill reveal"
           role="listitem"
         >
           <span class="cat-icon" aria-hidden="true">◈</span>
-          <span class="cat-name text-mono-data">{{ cat.name }}</span>
+          <span class="cat-name text-mono-data">{{
+            cat.name.toUpperCase()
+          }}</span>
           <span class="cat-count text-mono-data">{{ cat.count }}</span>
-        </button>
+        </NuxtLink>
       </div>
     </section>
 
