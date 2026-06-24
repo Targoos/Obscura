@@ -1,5 +1,5 @@
 import type { Database } from "~/types/supabase";
-import type { Mystery } from "~/types/mystery";
+import type { Mystery, MysteryDetail } from "~/types/mystery";
 
 type SortField = "created_at" | "views_count" | "rating_avg" | "year_occurred";
 
@@ -92,7 +92,7 @@ export function useMysteries() {
     return { data: result, count: total.value };
   }
 
-  async function fetchBySlug(slug: string): Promise<Mystery | null> {
+  async function fetchBySlug(slug: string): Promise<MysteryDetail | null> {
     loading.value = true;
     error.value = null;
 
@@ -109,7 +109,7 @@ export function useMysteries() {
       return null;
     }
 
-    return normalizeTags(data) as unknown as Mystery;
+    return normalizeTags(data) as unknown as MysteryDetail;
   }
 
   async function fetchRelated(

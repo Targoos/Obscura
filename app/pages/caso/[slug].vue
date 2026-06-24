@@ -1,320 +1,71 @@
 <script setup lang="ts">
-import type { Mystery, TimelineEvent, Theory, Source } from "~/types/mystery";
+import type { Mystery } from "~/types/mystery";
 
 const route = useRoute();
-const _slug = computed(() => route.params.slug as string);
+const slug = computed(() => route.params.slug as string);
 
-/* ─── Mock data ─── */
+const { fetchBySlug, fetchRelated } = useMysteries();
 
-const MYSTERY: Mystery = {
-  id: "dyatlov-pass-1959",
-  slug: "masacre-paso-dyatlov",
-  title: "La Masacre del Paso Dyatlov",
-  summary:
-    "Nueve excursionistas expertos mueren en circunstancias inexplicables en las montañas Urales. La investigación fue archivada. Los archivos, clasificados durante treinta años.",
-  description:
-    "En la noche del 1 de febrero de 1959, nueve experimentados excursionistas soviéticos ascendían el monte Kholat Syakhl en los Urales del Norte.",
-  status: "published",
-  classification_level: "extreme",
-  image_url: null,
-  latitude: 61.75,
-  longitude: 59.45,
-  year_occurred: 1959,
-  views_count: 847293,
-  rating_avg: 4.7,
-  rating_count: 2341,
-  category_id: "cat1",
-  country_id: "ru",
-  created_at: "2024-01-01T00:00:00Z",
-  updated_at: "2024-03-15T00:00:00Z",
-  published_at: "2024-01-01T00:00:00Z",
-  created_by: "admin",
-  category: {
-    id: "cat1",
-    name: "Suceso Inexplicable",
-    slug: "suceso-inexplicable",
-    description: null,
-    icon: null,
-    color: null,
-    created_at: "2024-01-01T00:00:00Z",
-  },
-  country: {
-    id: "ru",
-    name: "Rusia",
-    code: "RU",
-    flag_emoji: "🇷🇺",
-    continent: "Europe",
-    created_at: "2024-01-01T00:00:00Z",
-  },
-};
+const { data: mystery } = await useAsyncData(
+  () => `caso-${slug.value}`,
+  () => fetchBySlug(slug.value),
+  { watch: [slug] },
+);
 
-const TIMELINE: TimelineEvent[] = [
-  {
-    id: "tl1",
-    mystery_id: "dyatlov-pass-1959",
-    year: 1959,
-    title: "El grupo parte de Sverdlovsk",
-    description:
-      "Nueve excursionistas del Instituto Politécnico de los Urales, liderados por Igor Dyatlov, inician su expedición invernal de categoría III hacia el monte Kholat Syakhl. El grupo tiene experiencia acreditada en condiciones extremas.",
-    order: 1,
-    created_at: "",
-  },
-  {
-    id: "tl2",
-    mystery_id: "dyatlov-pass-1959",
-    year: 1959,
-    title: "Última entrada registrada en los diarios",
-    description:
-      "Zinaida Kolmogorova escribe la última entrada conocida. El grupo reporta condiciones favorables y buen estado de ánimo. Es la última comunicación verificada con el exterior.",
-    order: 2,
-    created_at: "",
-  },
-  {
-    id: "tl3",
-    mystery_id: "dyatlov-pass-1959",
-    year: 1959,
-    title: "Noche del incidente",
-    description:
-      "Algo obliga al grupo a rasgar la tienda desde el interior y huir hacia el bosque en estado de pánico. La temperatura exterior ronda los –30°C. Ninguno lleva calzado. Ninguno regresa.",
-    order: 3,
-    created_at: "",
-  },
-  {
-    id: "tl4",
-    mystery_id: "dyatlov-pass-1959",
-    year: 1959,
-    title: "Los rescatistas hallan el campamento vacío",
-    description:
-      "Una patrulla de búsqueda localiza la tienda rasgada desde adentro. Los primeros cinco cuerpos son encontrados a cientos de metros del campamento en dirección al bosque, en diferentes estados.",
-    order: 4,
-    created_at: "",
-  },
-  {
-    id: "tl5",
-    mystery_id: "dyatlov-pass-1959",
-    year: 1959,
-    title: "Cuatro cuerpos recuperados bajo la nieve",
-    description:
-      "Con el deshielo, se localizan los cuatro cuerpos restantes en un barranco. Las heridas forenses resultan inexplicables. Las prendas presentan radiación. El cuerpo de Dubinina carece de partes blandas del rostro.",
-    order: 5,
-    created_at: "",
-  },
-  {
-    id: "tl6",
-    mystery_id: "dyatlov-pass-1959",
-    year: 1959,
-    title: "Investigación archivada oficialmente",
-    description:
-      "La Fiscalía de Sverdlovsk cierra el caso. Causa oficial: «fuerza natural irresistible». Los expedientes son clasificados y entregados al KGB. El acceso al Paso Dyatlov queda prohibido durante tres años.",
-    order: 6,
-    created_at: "",
-  },
-  {
-    id: "tl7",
-    mystery_id: "dyatlov-pass-1959",
-    year: 1990,
-    title: "Los archivos se abren al público",
-    description:
-      "El gobierno ruso desclasifica parte de los documentos. Los investigadores descubren que páginas completas de los expedientes forenses han desaparecido. El caso es reabierto informalmente por el Fondo Dyatlov. Permanece sin resolver.",
-    order: 7,
-    created_at: "",
-  },
-];
+if (!mystery.value) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: "Caso no encontrado",
+    fatal: true,
+  });
+}
 
-const THEORIES: Theory[] = [
-  {
-    id: "th1",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Prueba militar — Arma de onda de presión",
-    description:
-      "La región era zona de pruebas militares soviéticas activas. Las fracturas óseas sin traumatismo externo son consistentes con una onda de presión de alto impacto. La radiación en las prendas y la prohibición posterior de acceso al área refuerzan esta hipótesis. Testimonios de habitantes locales describen «esferas luminosas naranjas» sobre el cielo la noche del incidente.",
-    credibility_score: 78,
-    source_url: "Ref. KGB-1959-04-073",
-    created_at: "",
-  },
-  {
-    id: "th2",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Avalancha de placa de nieve",
-    description:
-      "La teoría oficial revisada en 2019 sugiere una avalancha de placa en la ladera. Sin embargo, la pendiente del terreno es insuficiente para generar el impacto observado. La ausencia de nieve sobre los cuerpos más cercanos al campamento la contradice directamente.",
-    credibility_score: 45,
-    source_url: "Fiscalía Sverdlovsk — Revisión 2019",
-    created_at: "",
-  },
-  {
-    id: "th3",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Infrasound — Resonancia de viento montañoso",
-    description:
-      "Frecuencias de infrasound generadas por el viento al superar el relieve montañoso pueden inducir pánico extremo, desorientación severa y alucinaciones. Explicaría la huida irracional, pero no las mutilaciones ni los niveles de radiación en las prendas.",
-    credibility_score: 35,
-    source_url: "Journal of Acoustic Science, 2013",
-    created_at: "",
-  },
-  {
-    id: "th4",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Intervención de origen desconocido",
-    description:
-      "Múltiples testigos en pueblos cercanos reportaron luces anaranjadas en el cielo durante las fechas del incidente. Los Mansi denominan al Kholat Syakhl «la montaña de los nueve muertos» — topónimo que precede al incidente de 1959 por décadas.",
-    credibility_score: 12,
-    source_url: "Testimonio Mansi — Archivo Sverdlovsk 1959",
-    created_at: "",
-  },
-];
+const { data: related } = await useAsyncData(
+  () => `caso-related-${slug.value}`,
+  () =>
+    mystery.value
+      ? fetchRelated(mystery.value.id, mystery.value.category_id)
+      : Promise.resolve([] as Mystery[]),
+  { default: () => [] as Mystery[], watch: [mystery] },
+);
 
-const SOURCES: Source[] = [
-  {
-    id: "s1",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Archivo Nacional URSS — Ref. KGB-1959-04-073",
-    url: "",
-    type: "archive",
-    year: 1959,
-    created_at: "",
-  },
-  {
-    id: "s2",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Informe forense — Dr. Boris Vozrozhdenny, Sverdlovsk",
-    url: "",
-    type: "forensic",
-    year: 1959,
-    created_at: "",
-  },
-  {
-    id: "s3",
-    mystery_id: "dyatlov-pass-1959",
-    title:
-      "Diarios personales de los excursionistas — Digitalización 2013, Fondo Dyatlov",
-    url: "",
-    type: "primary",
-    year: 2013,
-    created_at: "",
-  },
-  {
-    id: "s4",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Informe final Fiscalía Sverdlovsk — Ref. 171959",
-    url: "",
-    type: "legal",
-    year: 1959,
-    created_at: "",
-  },
-  {
-    id: "s5",
-    mystery_id: "dyatlov-pass-1959",
-    title: "Testimonio rescatistas — Coronel Ortiyukow",
-    url: "",
-    type: "testimony",
-    year: 1959,
-    created_at: "",
-  },
-];
+useHead(() => ({ title: `${mystery.value?.title ?? "Caso"} — Obscura` }));
 
-const RELATED: Mystery[] = [
-  {
-    id: "mh370",
-    slug: "vuelo-mh370",
-    title: "Vuelo MH370",
-    summary: "",
-    description: "",
-    status: "published",
-    classification_level: "disturbing",
-    image_url: null,
-    latitude: null,
-    longitude: null,
-    year_occurred: 2014,
-    views_count: 0,
-    rating_avg: 0,
-    rating_count: 0,
-    category_id: "cat1",
-    country_id: "my",
-    created_at: "",
-    updated_at: "",
-    published_at: null,
-    created_by: "admin",
-    country: {
-      id: "my",
-      name: "Malasia",
-      code: "MY",
-      flag_emoji: "🇲🇾",
-      continent: "Asia",
-      created_at: "",
-    },
-  },
-  {
-    id: "mk-ultra",
-    slug: "proyecto-mk-ultra",
-    title: "Proyecto MK-Ultra",
-    summary: "",
-    description: "",
-    status: "published",
-    classification_level: "classified",
-    image_url: null,
-    latitude: null,
-    longitude: null,
-    year_occurred: 1953,
-    views_count: 0,
-    rating_avg: 0,
-    rating_count: 0,
-    category_id: "cat2",
-    country_id: "us",
-    created_at: "",
-    updated_at: "",
-    published_at: null,
-    created_by: "admin",
-    country: {
-      id: "us",
-      name: "EEUU",
-      code: "US",
-      flag_emoji: "🇺🇸",
-      continent: "America",
-      created_at: "",
-    },
-  },
-  {
-    id: "voynich",
-    slug: "manuscrito-voynich",
-    title: "El Manuscrito Voynich",
-    summary: "",
-    description: "",
-    status: "archived",
-    classification_level: "disturbing",
-    image_url: null,
-    latitude: null,
-    longitude: null,
-    year_occurred: 1400,
-    views_count: 0,
-    rating_avg: 0,
-    rating_count: 0,
-    category_id: "cat3",
-    country_id: "it",
-    created_at: "",
-    updated_at: "",
-    published_at: null,
-    created_by: "admin",
-    country: {
-      id: "it",
-      name: "Italia",
-      code: "IT",
-      flag_emoji: "🇮🇹",
-      continent: "Europe",
-      created_at: "",
-    },
-  },
-];
+const timeline = computed(() =>
+  [...(mystery.value?.timeline_events ?? [])].sort(
+    (a, b) => a.order - b.order || a.year - b.year,
+  ),
+);
+const theories = computed(() =>
+  [...(mystery.value?.theories ?? [])].sort(
+    (a, b) => b.credibility_score - a.credibility_score,
+  ),
+);
+const sources = computed(() => mystery.value?.sources ?? []);
 
-const HECHOS = [
-  "La tienda fue rasgada desde el interior por los propios excursionistas, lo que indica una huida en pánico ante una amenaza inmediata e identificada.",
-  "Las víctimas abandonaron el campamento descalzas a una temperatura estimada de –30°C, excluyendo cualquier decisión racional o planificada.",
-  "Tres cuerpos presentaban fracturas óseas en costillas y cráneo compatibles con impacto de alta energía; la piel, sin embargo, permanecía intacta en todos los casos.",
-  "El cadáver de Lyudmila Dubinina carecía de lengua, ojos y parte del labio superior. El forense no pudo determinar el mecanismo ni la causa de esta mutilación.",
-  "Varias prendas de los excursionistas registraron niveles de radiación beta y gamma significativamente elevados según el análisis forense de mayo de 1959.",
-  "La investigación fue archivada en mayo de 1959 bajo la causa oficial de «fuerza natural desconocida». No se realizaron cargos ni abrió ningún procedimiento paralelo.",
-  "Los archivos completos del KGB sobre el incidente permanecieron clasificados hasta 1990 — treinta y un años después de los hechos.",
-];
+const paragraphs = computed(() => {
+  const desc = mystery.value?.description?.trim();
+  if (desc) return desc.split(/\n\n+/).filter(Boolean);
+  const summary = mystery.value?.summary?.trim();
+  return summary ? [summary] : [];
+});
+
+const hasCoords = computed(
+  () => mystery.value?.latitude != null && mystery.value?.longitude != null,
+);
+
+const mapLocation = computed(
+  () => mystery.value?.country?.name ?? mystery.value?.title ?? "—",
+);
+
+const coordsDisplay = computed(() => {
+  const lat = mystery.value?.latitude;
+  const lng = mystery.value?.longitude;
+  if (lat == null || lng == null) return "—";
+  const latStr = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}`;
+  const lngStr = `${Math.abs(lng).toFixed(2)}°${lng >= 0 ? "E" : "W"}`;
+  return `${latStr} · ${lngStr}`;
+});
 
 interface MockComment {
   id: string;
@@ -384,8 +135,8 @@ onUnmounted(() => revObs?.disconnect());
 </script>
 
 <template>
-  <div>
-    <MysteryHero :mystery="MYSTERY" />
+  <div v-if="mystery">
+    <MysteryHero :mystery="mystery" />
 
     <main id="expediente" class="page-content">
       <div class="two-col">
@@ -396,64 +147,26 @@ onUnmounted(() => revObs?.disconnect());
             class="editorial-summary reveal"
             aria-label="Resumen editorial"
           >
-            <p>
-              En la noche del 1 de febrero de 1959, nueve experimentados
-              excursionistas soviéticos ascendían el monte Kholat Syakhl en los
-              Urales del Norte. A una temperatura de cuarenta grados bajo cero,
-              algo les obligó a rasgar su tienda desde el interior y huir
-              descalzos hacia la oscuridad. Ninguno sobrevivió.
-            </p>
-            <p>
-              Los cuerpos fueron hallados en posiciones que desafían toda
-              explicación racional. Algunos presentaban fracturas óseas de una
-              violencia equivalente a un accidente de tráfico a alta velocidad,
-              pero sin marcas externas en la piel. La lengua, los ojos y parte
-              del tejido facial de una de las víctimas habían desaparecido. Sus
-              ropas registraron niveles de radiación anómalos.
-            </p>
-            <p>
-              El fiscal de Sverdlovsk archivó el caso bajo la designación
-              oficial de «fuerza natural desconocida». Los documentos
-              permanecieron clasificados hasta 1990. Hoy, sesenta y cinco años
-              después, no existe una explicación consensuada. El expediente
-              sigue abierto.
-            </p>
-          </section>
-
-          <!-- Hechos conocidos -->
-          <section class="hechos reveal" aria-label="Hechos conocidos">
-            <SectionLabel label="// 02 — HECHOS CONOCIDOS" />
-            <div v-for="(hecho, i) in HECHOS" :key="i" class="hecho-item">
-              <span class="hecho-num" aria-hidden="true">{{
-                String(i + 1).padStart(2, "0")
-              }}</span>
-              <span class="hecho-chevron" aria-hidden="true">›</span>
-              <span class="hecho-text">{{ hecho }}</span>
-            </div>
+            <p v-for="(parrafo, i) in paragraphs" :key="i">{{ parrafo }}</p>
           </section>
 
           <!-- Timeline -->
-          <MysteryTimeline :events="TIMELINE" />
+          <MysteryTimeline v-if="timeline.length" :events="timeline" />
 
           <!-- Theories -->
-          <MysteryTheories :theories="THEORIES" />
+          <MysteryTheories v-if="theories.length" :theories="theories" />
         </div>
         <!-- end col-main -->
 
         <!-- RIGHT COLUMN — sidebar -->
         <aside class="col-sidebar" aria-label="Datos del expediente">
-          <DossierSidebar
-            :mystery="MYSTERY"
-            :sources="SOURCES"
-            location-name="Paso Dyatlov, Urales del Norte"
-            victims="9 CONFIRMADAS"
-            classified-period="KGB 1959 – 1990"
-          />
+          <DossierSidebar :mystery="mystery" :sources="sources" />
           <MapPlaceholder
-            location-name="Paso Dyatlov"
-            coords-display="61°45'N · 59°27'E"
+            v-if="hasCoords"
+            :location-name="mapLocation"
+            :coords-display="coordsDisplay"
           />
-          <MysteryRelated :mysteries="RELATED" />
+          <MysteryRelated v-if="related.length" :mysteries="related" />
         </aside>
         <!-- end col-sidebar -->
       </div>

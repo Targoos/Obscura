@@ -90,6 +90,12 @@ export interface Source {
   created_at: string;
 }
 
+export interface MysteryDetail extends Mystery {
+  timeline_events: TimelineEvent[];
+  theories: Theory[];
+  sources: Source[];
+}
+
 export interface Comment {
   id: string;
   user_id: string;
